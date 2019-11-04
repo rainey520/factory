@@ -25,7 +25,7 @@ public class CodeInfo extends BaseEntity
 	private Integer cusId;
 	/** 客户名称*/
 	private String cusName;
-	/** 编码描述 */
+	/** 规格名称 */
 	private String pnRemark;
 	/** 单价 */
 	private Float pnPrice;
