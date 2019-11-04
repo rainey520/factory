@@ -1,0 +1,223 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head th:include="include :: header"></head>
+<link th:href="@{/ajax/libs/jquery-layout/jquery.layout-latest.css}" rel="stylesheet"/>
+<body class="gray-bg">
+
+<div class="container-div">
+    <div class="row">
+        <div class="col-sm-12 search-collapse">
+            <form id="formId">
+                <div class="select-list">
+                    <ul>
+                        <li>
+                            客户名称：
+                            <select id="cusName" name="cusName"
+                                    th:with="cusList=${@customer.selectCustomerListByComId(null)}">
+                                <option value="">全部</option>
+                                <option th:each="item:${cusList}" th:text="${item.cusName}"
+                                        th:value="${item.cusName}"></option>
+                            </select>
+                        </li>
+                        <li>
+                            公司类型：
+                            <select id="cusType" name="cusType" style="width: 80px">
+                                <option value="">全部</option>
+                                <option value="1">客户</option>
+                                <option value="2">外加工</option>
+                            </select>
+                        </li>
+
+                        <li>
+                            联系方式：<input type="text" name="cusPhone"/>
+                        </li>
+
+                        <li>
+                            联系人：<input type="text" name="cusPerson"/>
+                        </li>
+                        <li>
+                            <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i
+                                    class="fa fa-search"></i>&nbsp;搜索</a>
+                            <a class="btn btn-warning btn-rounded btn-sm" onclick="formReset()"><i
+                                    class="fa fa-refresh"></i>&nbsp;重置</a>
+                        </li>
+                    </ul>
+                </div>
+            </form>
+        </div>
+        <div class="col-sm-12 search-collapse" shiro:hasPermission="factory:customer:record">
+            <form id="recordForm">
+                <div class="select-list">
+                    <ul>
+                        <li>
+                            对账客户：
+                            <select id="cusId" name="cusId"
+                                    th:with="cusList=${@customer.selectCustomerListByComId(null)}">
+                                <option value="">请选择</option>
+                                <option th:each="item:${cusList}" th:text="${item.cusName}"
+                                        th:value="${item.id}"></option>
+                            </select>
+                        </li>
+                        <li class="select-time">
+                            <label>对账日期： </label>
+                            <input type="text" class="time-input" id="sTime" placeholder="开始时间"
+                                   name="sTime"/>
+                            <span>-</span>
+                            <input type="text" class="time-input" id="eTime" placeholder="结束时间"
+                                   name="eTime"/>
+                        </li>
+                        <li>
+                            <a class="btn btn-danger btn-rounded btn-sm" onclick="recordExcel()"><i
+                                    class="fa fa-calculator"></i>&nbsp;对账</a>
+                            <a class="btn btn-warning btn-rounded btn-sm" onclick="formReset2()"><i
+                                    class="fa fa-refresh"></i>&nbsp;重置</a>
+                        </li>
+                    </ul>
+                </div>
+            </form>
+        </div>
+
+        <div class="btn-group-sm hidden-xs" id="toolbar" role="group">
+            <a class="btn btn-success" onclick="$.operate.add()" shiro:hasPermission="factory:customer:add">
+                <i class="fa fa-plus"></i> 添加
+            </a>
+            <a class="btn btn-primary btn-edit disabled" onclick="$.operate.edit()"
+               shiro:hasPermission="factory:customer:add">
+                <i class="fa fa-edit"></i> 修改
+            </a>
+            <a class="btn btn-danger btn-del btn-del disabled" onclick="$.operate.removeAll()"
+               shiro:hasPermission="factory:customer:remove">
+                <i class="fa fa-remove"></i> 删除
+            </a>
+        </div>
+        <div class="col-sm-12 select-table table-striped">
+            <table id="bootstrap-table" data-mobile-responsive="true"></table>
+        </div>
+    </div>
+</div>
+<div th:include="include :: footer"></div>
+<script th:src="@{/ajax/libs/jquery-layout/jquery.layout-latest.js}"></script>
+<script th:inline="javascript">
+    var editFlag = [[${@permission.hasPermi('factory:customer:add')}]];
+    var removeFlag = [[${@permission.hasPermi('factory:customer:remove')}]];
+    var prefix = ctx + "factory/customer";
+
+    $(function () {
+        $("#cusName").select2({
+            width:"200px",
+        });
+        $("#cusId").select2({
+            width:"200px",
+        });
+    });
+
+    // 重置搜索表单一信息
+    function formReset() {
+        $('#formId')[0].reset();//input标签重置
+        $("#cusName").val(null).trigger("change"); // select2标签重置
+    }
+
+    // 重置搜索表单一信息
+    function formReset2() {
+        $('#recordForm')[0].reset();//input标签重置
+        $("#cusId").val(null).trigger("change"); // select2标签重置
+    }
+
+    $(function () {
+        var options = {
+            url: prefix + "/list",
+            createUrl: prefix + "/add",
+            updateUrl: prefix + "/edit/{id}",
+            removeUrl: prefix + "/remove",
+            exportUrl: prefix + "/export",
+            modalName: "客户",
+            search: false,
+            showExport: true,
+            columns: [{
+                checkbox: true
+            },
+                {
+                    field: 'id',
+                    title: '客户主键id',
+                    visible: false
+                },
+                {
+                    field: 'cusName',
+                    title: '公司名称',
+                    sortable: true
+                },
+                {
+                    field: 'cusType',
+                    title: '公司类型',
+                    sortable: true,
+                    formatter: function (value, row, index) {
+                        if (value == 1) {
+                            return '<span style="font-weight: bold;color: #00a65a">客户</span>'
+                        } else {
+                            return '<span style="font-weight: bold;color: blue">外加工</span>'
+                        }
+                    }
+                },
+                {
+                    field: 'cusPhone',
+                    title: '联系方式',
+                    sortable: true
+                },
+                {
+                    field: 'cusPerson',
+                    title: '联系人',
+                    sortable: true
+                },
+                {
+                    field: 'cusAddress',
+                    title: '客户地址',
+                    sortable: true
+                },
+                {
+                    field: 'cusPayDate',
+                    title: '结款期限',
+                    sortable: true
+                },
+                {
+                    title: '操作',
+                    align: 'center',
+                    formatter: function (value, row, index) {
+                        var actions = [];
+                        actions.push('<a class="btn btn-success btn-xs ' + editFlag + '" href="#" onclick="$.operate.edit(\'' + row.id + '\')"><i class="fa fa-edit"></i>编辑</a> ');
+                        actions.push('<a class="btn btn-danger btn-xs ' + removeFlag + '" href="#" onclick="$.operate.remove(\'' + row.id + '\')"><i class="fa fa-remove"></i>删除</a>');
+                        return actions.join('');
+                    }
+                }]
+        };
+        $.table.init(options);
+    });
+
+    /**
+     * 对账管理EXCEl格式
+     */
+    function recordExcel() {
+        var cusId = $("#cusId").find("option:selected").val();
+        if ($.common.isEmpty(cusId)) {
+            $.modal.alertWarning("请选择对账的客户信息")
+            return;
+        }
+        var sTime = $("#sTime").val();
+        var eTime = $("#eTime").val();
+        if ($.common.isEmpty(sTime) || $.common.isEmpty(eTime)) {
+            $.modal.alertWarning("请选择对账开始结束时间")
+            return;
+        }
+        var url = prefix + "/recordExcel";
+        $.post(url, {cusId: cusId, sTime: sTime, eTime: eTime}, function (result) {
+            if (result.code == web_status.SUCCESS) {
+                window.location.href = ctx + "common/downloadName?fileName=" + result.msg + "&delete=" + true;
+            } else {
+                $.modal.alertError(result.msg);
+            }
+            $.modal.closeLoading();
+        })
+    }
+</script>
+</body>
+</html>

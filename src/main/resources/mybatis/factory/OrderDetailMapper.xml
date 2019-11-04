@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.project.factory.orderDetail.mapper.OrderDetailMapper">
+    
+    <resultMap type="OrderDetail" id="OrderDetailResult">
+        <result property="id"    column="id"    />
+        <result property="companyId"    column="company_id"    />
+        <result property="cusId"    column="cus_id"    />
+        <result property="orderId"    column="order_id"    />
+        <result property="orderCode"    column="order_code"    />
+        <result property="pnCode"    column="pn_code"    />
+        <result property="pnRemark"    column="pn_remark"    />
+        <result property="undeliveredNum"    column="undelivered_num"    />
+        <result property="deliveredNum"    column="delivered_num"    />
+        <result property="totalNum"    column="total_num"    />
+        <result property="unitPrice"    column="unit_price"    />
+        <result property="totalPrice"    column="total_price"    />
+        <result property="backNum"    column="back_num"    />
+        <association property="cusName" column="cus_id" select="selectCusName">
+            <result property="cusName" column="cus_name"/>
+        </association>
+    </resultMap>
+	
+	<sql id="selectOrderDetailVo">
+        select id, company_id, cus_id, order_id, order_code, pn_code, pn_remark, undelivered_num, delivered_num, total_num, unit_price, total_price, back_num from fac_order_detail
+    </sql>
+	
+    <select id="selectOrderDetailList" parameterType="OrderDetail" resultMap="OrderDetailResult">
+        <include refid="selectOrderDetailVo"/>
+        <where>  
+            <if test="id != null "> and id = #{id}</if>
+             <if test="companyId != null "> and company_id = #{companyId}</if>
+             <if test="cusId != null "> and cus_id = #{cusId}</if>
+             <if test="orderId != null "> and order_id = #{orderId}</if>
+             <if test="orderCode != null  and orderCode != '' "> and order_code = #{orderCode}</if>
+             <if test="pnCode != null  and pnCode != '' "> and pn_code = #{pnCode}</if>
+             <if test="pnRemark != null  and pnRemark != '' "> and pn_remark = #{pnRemark}</if>
+             <if test="undeliveredNum != null "> and undelivered_num = #{undeliveredNum}</if>
+             <if test="deliveredNum != null "> and delivered_num = #{deliveredNum}</if>
+             <if test="totalNum != null "> and total_num = #{totalNum}</if>
+             <if test="unitPrice != null "> and unit_price = #{unitPrice}</if>
+             <if test="totalPrice != null "> and total_price = #{totalPrice}</if>
+             <if test="backNum != null "> and back_num = #{backNum}</if>
+         </where>
+    </select>
+
+    <!--查询产品编码所属的客户名称-->
+    <select id="selectCusName" resultType="java.lang.String">
+        SELECT cus_name FROM fac_customer where id = #{cusId};
+    </select>
+    
+    <select id="selectOrderDetailById" parameterType="Integer" resultMap="OrderDetailResult">
+        <include refid="selectOrderDetailVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertOrderDetail" parameterType="OrderDetail" useGeneratedKeys="true" keyProperty="id">
+        insert into fac_order_detail
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="companyId != null  ">company_id,</if>
+			<if test="cusId != null  ">cus_id,</if>
+			<if test="orderId != null  ">order_id,</if>
+			<if test="orderCode != null  and orderCode != ''  ">order_code,</if>
+			<if test="pnCode != null  and pnCode != ''  ">pn_code,</if>
+			<if test="pnRemark != null  and pnRemark != ''  ">pn_remark,</if>
+			<if test="undeliveredNum != null  ">undelivered_num,</if>
+			<if test="deliveredNum != null  ">delivered_num,</if>
+			<if test="totalNum != null  ">total_num,</if>
+			<if test="unitPrice != null  ">unit_price,</if>
+			<if test="totalPrice != null  ">total_price,</if>
+			<if test="backNum != null  ">back_num,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="companyId != null  ">#{companyId},</if>
+			<if test="cusId != null  ">#{cusId},</if>
+			<if test="orderId != null  ">#{orderId},</if>
+			<if test="orderCode != null  and orderCode != ''  ">#{orderCode},</if>
+			<if test="pnCode != null  and pnCode != ''  ">#{pnCode},</if>
+			<if test="pnRemark != null  and pnRemark != ''  ">#{pnRemark},</if>
+			<if test="undeliveredNum != null  ">#{undeliveredNum},</if>
+			<if test="deliveredNum != null  ">#{deliveredNum},</if>
+			<if test="totalNum != null  ">#{totalNum},</if>
+			<if test="unitPrice != null  ">#{unitPrice},</if>
+			<if test="totalPrice != null  ">#{totalPrice},</if>
+			<if test="backNum != null  ">#{backNum},</if>
+         </trim>
+    </insert>
+	 
+    <update id="updateOrderDetail" parameterType="OrderDetail">
+        update fac_order_detail
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="companyId != null  ">company_id = #{companyId},</if>
+            <if test="cusId != null  ">cus_id = #{cusId},</if>
+            <if test="orderId != null  ">order_id = #{orderId},</if>
+            <if test="orderCode != null  and orderCode != ''  ">order_code = #{orderCode},</if>
+            <if test="pnCode != null  and pnCode != ''  ">pn_code = #{pnCode},</if>
+            <if test="pnRemark != null  and pnRemark != ''  ">pn_remark = #{pnRemark},</if>
+            <if test="undeliveredNum != null  ">undelivered_num = #{undeliveredNum},</if>
+            <if test="deliveredNum != null  ">delivered_num = #{deliveredNum},</if>
+            <if test="totalNum != null  ">total_num = #{totalNum},</if>
+            <if test="unitPrice != null  ">unit_price = #{unitPrice},</if>
+            <if test="totalPrice != null  ">total_price = #{totalPrice},</if>
+            <if test="backNum != null  ">back_num = #{backNum},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+	<delete id="deleteOrderDetailById" parameterType="Integer">
+        delete from fac_order_detail where id = #{id}
+    </delete>
+	
+    <delete id="deleteOrderDetailByIds" parameterType="String">
+        delete from fac_order_detail where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!--通过订单主表ID查询明细列表-->
+    <select id="selectOrderByOrderId" parameterType="Integer" resultMap="OrderDetailResult">
+        <include refid="selectOrderDetailVo"/>
+        where order_id = #{orderId}
+    </select>
+
+    <!--客户出库选择未关闭的订单-->
+    <select id="selectOrderDetailsByPnCode" resultMap="OrderDetailResult">
+       SELECT b.* FROM fac_order as a,fac_order_detail as b where a.id = b.order_id
+        and b.cus_id = #{cusId} and b.company_id = #{companyId} and b.pn_code = #{pnCode} and a.status != 2
+    </select>
+
+    <!--查询未交付完的订单信息-->
+    <select id="selectOrderDetailByDelNum" resultMap="OrderDetailResult">
+        <include refid="selectOrderDetailVo"/>
+        where cus_id = #{cusId} and company_id = #{companyId} and pn_code = #{pnCode} and delivered_num > 0
+    </select>
+
+    <!--查询已经交付完的订单信息-->
+    <select id="selectOrderDetailByUnDelNum" resultMap="OrderDetailResult">
+        <include refid="selectOrderDetailVo"/>
+        where cus_id = #{cusId} and company_id = #{companyId} and pn_code = #{pnCode} and undelivered_num = 0
+    </select>
+
+    <!--通过订单id删除-->
+    <delete id="deleteOrderDetailByOrderIds" parameterType="String">
+        delete from fac_order_detail where order_id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+</mapper>

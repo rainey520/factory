@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.project.factory.outOrder.mapper.OutOrderMapper">
+    
+    <resultMap type="OutOrder" id="OutOrderResult">
+        <result property="id"    column="id"    />
+        <result property="companyId"    column="company_id"    />
+        <result property="cusId"    column="cus_id"    />
+        <result property="outCode"    column="out_code"    />
+        <result property="outType"    column="out_type"    />
+        <result property="outTime"    column="out_time"    />
+        <result property="outNum"    column="out_num"    />
+        <result property="outPrice"    column="out_price"    />
+        <result property="status"    column="status"    />
+        <result property="remark"    column="remark"    />
+        <association property="cusName" column="cus_id" select="selectCusName">
+            <result property="cusName" column="cus_name"/>
+        </association>
+    </resultMap>
+	
+	<sql id="selectOutOrderVo">
+        select id, company_id, cus_id, out_code, out_type, out_time,out_num,out_price,status,remark from fac_out_order
+    </sql>
+	
+    <select id="selectOutOrderList" parameterType="OutOrder" resultMap="OutOrderResult">
+        SELECT a.* FROM fac_out_order a left join fac_out_order_detail b on a.id = b.out_id
+        <where>  
+            <if test="id != null "> and a.id = #{id}</if>
+             <if test="companyId != null "> and a.company_id = #{companyId}</if>
+             <if test="cusId != null "> and a.cus_id = #{cusId}</if>
+             <if test="outCode != null  and outCode != '' "> and a.out_code like concat('%',#{outCode},'%')</if>
+             <if test="pnCode != null  and pnCode != '' "> and b.pn_code like concat('%',#{pnCode},'%')</if>
+             <if test="orderCode != null  and orderCode != '' "> and b.order_code = #{orderCode}</if>
+             <if test="outType != null "> and a.out_type = #{outType}</if>
+             <if test="status != null "> and a.status = #{status}</if>
+             <if test="params.beginTime != null and params.beginTime != ''"><!-- 开始时间检索 -->
+                AND date_format(a.out_time,'%y%m%d') &gt;= date_format(#{params.beginTime},'%y%m%d')
+             </if>
+             <if test="params.endTime != null and params.endTime != ''"><!-- 结束时间检索 -->
+                AND date_format(a.out_time,'%y%m%d') &lt;= date_format(#{params.endTime},'%y%m%d')
+             </if>
+         </where>
+        group by a.id,a.company_id,a.cus_id,a.out_code,a.out_type,a.out_time,a.out_num,a.out_price,a.status,a.remark
+    </select>
+
+    <!--查询产品编码所属的客户名称-->
+    <select id="selectCusName" resultType="java.lang.String">
+        SELECT cus_name FROM fac_customer where id = #{cusId};
+    </select>
+    
+    <select id="selectOutOrderById" parameterType="Integer" resultMap="OutOrderResult">
+        <include refid="selectOutOrderVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertOutOrder" parameterType="OutOrder" useGeneratedKeys="true" keyProperty="id">
+        insert into fac_out_order
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="companyId != null  ">company_id,</if>
+			<if test="cusId != null  ">cus_id,</if>
+			<if test="outCode != null  and outCode != ''  ">out_code,</if>
+			<if test="outType != null  ">out_type,</if>
+			<if test="outTime != null  ">out_time,</if>
+            <if test="outNum != null  ">out_num,</if>
+            <if test="outPrice != null  ">out_price,</if>
+            <if test="status != null  ">status,</if>
+            <if test="remark != null and remark != '' ">status,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="companyId != null  ">#{companyId},</if>
+			<if test="cusId != null  ">#{cusId},</if>
+			<if test="outCode != null  and outCode != ''  ">#{outCode},</if>
+			<if test="outType != null  ">#{outType},</if>
+			<if test="outTime != null  ">#{outTime},</if>
+            <if test="outNum != null  ">#{outNum},</if>
+            <if test="outPrice != null  ">#{outPrice},</if>
+            <if test="status != null  ">#{status},</if>
+            <if test="remark != null and remark != '' ">#{remark},</if>
+         </trim>
+    </insert>
+	 
+    <update id="updateOutOrder" parameterType="OutOrder">
+        update fac_out_order
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="companyId != null  ">company_id = #{companyId},</if>
+            <if test="cusId != null  ">cus_id = #{cusId},</if>
+            <if test="outCode != null  and outCode != ''  ">out_code = #{outCode},</if>
+            <if test="outType != null  ">out_type = #{outType},</if>
+            <if test="outTime != null  ">out_time = #{outTime},</if>
+            <if test="outNum != null  ">out_num = #{outNum},</if>
+            <if test="outPrice != null  ">out_price = #{outPrice},</if>
+            <if test="status != null  ">status = #{status},</if>
+            <if test="remark != null and remark != '' ">remark = #{remark},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+	<delete id="deleteOutOrderById" parameterType="Integer">
+        delete from fac_out_order where id = #{id}
+    </delete>
+	
+    <delete id="deleteOutOrderByIds" parameterType="String">
+        delete from fac_out_order where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+</mapper>

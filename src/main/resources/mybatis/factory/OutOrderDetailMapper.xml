@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.project.factory.outOrderDetail.mapper.OutOrderDetailMapper">
+    
+    <resultMap type="OutOrderDetail" id="OutOrderDetailResult">
+        <result property="id"    column="id"    />
+        <result property="companyId"    column="company_id"    />
+        <result property="cusId"    column="cus_id"    />
+        <result property="outId"    column="out_id"    />
+        <result property="outCode"    column="out_code"    />
+        <result property="orderId"    column="order_id"    />
+        <result property="orderCode"    column="order_code"    />
+        <result property="outNumber"    column="out_number"    />
+        <result property="pnPrice"    column="pn_price"    />
+        <result property="pnCode"    column="pn_code"    />
+        <result property="pnUnit"    column="pn_unit"    />
+        <result property="pnRemark"    column="pn_remark"    />
+        <result property="totalPrice"    column="total_price"    />
+        <result property="outRemark"    column="out_remark"    />
+        <result property="outTime"    column="out_time"    />
+    </resultMap>
+	
+	<sql id="selectOutOrderDetailVo">
+        select id, company_id, cus_id, out_id,out_code, order_id, order_code, out_number, pn_price, pn_code,pn_unit, pn_remark, total_price, out_remark, out_time from fac_out_order_detail
+    </sql>
+	
+    <select id="selectOutOrderDetailList" parameterType="OutOrderDetail" resultMap="OutOrderDetailResult">
+        <include refid="selectOutOrderDetailVo"/>
+        <where>  
+            <if test="id != null "> and id = #{id}</if>
+             <if test="companyId != null "> and company_id = #{companyId}</if>
+             <if test="cusId != null "> and cus_id = #{cusId}</if>
+             <if test="outId != null "> and out_id = #{outId}</if>
+             <if test="outCode != null and outCode != ''"> and out_code = #{outCode}</if>
+             <if test="orderId != null "> and order_id = #{orderId}</if>
+             <if test="orderCode != null  and orderCode != '' "> and order_code = #{orderCode}</if>
+             <if test="outNumber != null "> and out_number = #{outNumber}</if>
+             <if test="pnPrice != null "> and pn_price = #{pnPrice}</if>
+             <if test="pnCode != null  and pnCode != '' "> and pn_code = #{pnCode}</if>
+             <if test="pnRemark != null  and pnRemark != '' "> and pn_remark = #{pnRemark}</if>
+             <if test="totalPrice != null "> and total_price = #{totalPrice}</if>
+             <if test="outRemark != null  and outRemark != '' "> and out_remark = #{outRemark}</if>
+             <if test="outTime != null "> and out_time = #{outTime}</if>
+         </where>
+    </select>
+    
+    <select id="selectOutOrderDetailById" parameterType="Integer" resultMap="OutOrderDetailResult">
+        <include refid="selectOutOrderDetailVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertOutOrderDetail" parameterType="OutOrderDetail" useGeneratedKeys="true" keyProperty="id">
+        insert into fac_out_order_detail
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="companyId != null  ">company_id,</if>
+			<if test="cusId != null  ">cus_id,</if>
+			<if test="outId != null  ">out_id,</if>
+			<if test="orderId != null  ">order_id,</if>
+			<if test="orderCode != null  and orderCode != ''  ">order_code,</if>
+			<if test="outNumber != null  ">out_number,</if>
+			<if test="pnPrice != null  ">pn_price,</if>
+			<if test="pnCode != null  and pnCode != ''  ">pn_code,</if>
+			<if test="pnRemark != null  and pnRemark != ''  ">pn_remark,</if>
+			<if test="totalPrice != null  ">total_price,</if>
+			<if test="outRemark != null  and outRemark != ''  ">out_remark,</if>
+			<if test="outTime != null  ">out_time,</if>
+            <if test="outCode != null and outCode != '' ">out_code,</if>
+            <if test="pnUnit != null and pnUnit != '' ">pn_unit,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="companyId != null  ">#{companyId},</if>
+			<if test="cusId != null  ">#{cusId},</if>
+			<if test="outId != null  ">#{outId},</if>
+			<if test="orderId != null  ">#{orderId},</if>
+			<if test="orderCode != null  and orderCode != ''  ">#{orderCode},</if>
+			<if test="outNumber != null  ">#{outNumber},</if>
+			<if test="pnPrice != null  ">#{pnPrice},</if>
+			<if test="pnCode != null  and pnCode != ''  ">#{pnCode},</if>
+			<if test="pnRemark != null  and pnRemark != ''  ">#{pnRemark},</if>
+			<if test="totalPrice != null  ">#{totalPrice},</if>
+			<if test="outRemark != null  and outRemark != ''  ">#{outRemark},</if>
+			<if test="outTime != null  ">#{outTime},</if>
+            <if test="outCode != null and outCode != '' ">#{outCode},</if>
+            <if test="pnUnit != null and pnUnit != '' ">#{pnUnit},</if>
+         </trim>
+    </insert>
+	 
+    <update id="updateOutOrderDetail" parameterType="OutOrderDetail">
+        update fac_out_order_detail
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="companyId != null  ">company_id = #{companyId},</if>
+            <if test="cusId != null  ">cus_id = #{cusId},</if>
+            <if test="outId != null  ">out_id = #{outId},</if>
+            <if test="orderId != null  ">order_id = #{orderId},</if>
+            <if test="orderCode != null  and orderCode != ''  ">order_code = #{orderCode},</if>
+            <if test="outNumber != null  ">out_number = #{outNumber},</if>
+            <if test="pnPrice != null  ">pn_price = #{pnPrice},</if>
+            <if test="pnCode != null  and pnCode != ''  ">pn_code = #{pnCode},</if>
+            <if test="pnRemark != null  and pnRemark != ''  ">pn_remark = #{pnRemark},</if>
+            <if test="totalPrice != null  ">total_price = #{totalPrice},</if>
+            <if test="outRemark != null  and outRemark != ''  ">out_remark = #{outRemark},</if>
+            <if test="outTime != null  ">out_time = #{outTime},</if>
+            <if test="outCode != null and outCode != '' ">out_code = #{outCode},</if>
+            <if test="pnUnit != null and pnUnit != '' ">pn_unit = #{pnUnit},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+	<delete id="deleteOutOrderDetailById" parameterType="Integer">
+        delete from fac_out_order_detail where id = #{id}
+    </delete>
+	
+    <delete id="deleteOutOrderDetailByIds" parameterType="String">
+        delete from fac_out_order_detail where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!--通过出库单主键id查询明细列表-->
+    <select id="selectOutOrderDetailByOutId" resultMap="OutOrderDetailResult">
+        <include refid="selectOutOrderDetailVo"/>
+        where out_id = #{outId}
+    </select>
+
+    <!--查询对账明细-->
+    <select id="selectRecordExcelList" resultMap="OutOrderDetailResult">
+        SELECT b.* FROM fac_out_order as a,fac_out_order_detail as b where a.id = b.out_id and a.status = 1
+        and b.company_id = #{companyId} and b.cus_id = #{cusId} and b.out_time between #{sTime} and #{eTime}
+        order by out_time desc
+    </select>
+
+    <!--通过出库id删除明细-->
+    <delete id="deleteOutOrderDetailByOutIds" parameterType="String">
+        delete from fac_out_order_detail where out_id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+</mapper>

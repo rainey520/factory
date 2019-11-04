@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.project.factory.codeInfo.mapper.CodeInfoMapper">
+    
+    <resultMap type="CodeInfo" id="CodeInfoResult">
+        <result property="id"    column="id"    />
+        <result property="pnCode"    column="pn_code"    />
+        <result property="pnName"    column="pn_name"    />
+        <result property="cusId"    column="cus_id"    />
+        <result property="pnRemark"    column="pn_remark"    />
+        <result property="pnPrice"    column="pn_price"    />
+        <result property="pnTime"    column="pn_time"    />
+        <result property="companyId"    column="company_id"    />
+        <result property="pnUnit"    column="pn_unit"    />
+        <association property="cusName" column="cus_id" select="selectCusName">
+            <result property="cusName" column="cus_name"/>
+        </association>
+    </resultMap>
+	
+	<sql id="selectCodeInfoVo">
+        select id, pn_code, pn_name, cus_id, pn_remark, pn_price, pn_time, company_id, pn_unit from fac_code_info
+    </sql>
+	
+    <select id="selectCodeInfoList" parameterType="CodeInfo" resultMap="CodeInfoResult">
+        <include refid="selectCodeInfoVo"/>
+        <where>  
+            <if test="id != null "> and id = #{id}</if>
+             <if test="pnCode != null  and pnCode != '' "> and pn_code like concat('%',#{pnCode},'%')</if>
+             <if test="pnName != null  and pnName != '' "> and pn_name = #{pnName}</if>
+             <if test="cusId != null "> and cus_id = #{cusId}</if>
+             <if test="pnRemark != null  and pnRemark != '' "> and pn_remark = #{pnRemark}</if>
+             <if test="pnPrice != null "> and pn_price = #{pnPrice}</if>
+             <if test="pnTime != null "> and pn_time = #{pnTime}</if>
+             <if test="companyId != null "> and company_id = #{companyId}</if>
+             <if test="pnUnit != null  and pnUnit != '' "> and pn_unit = #{pnUnit}</if>
+         </where>
+    </select>
+    
+    <select id="selectCodeInfoById" parameterType="Integer" resultMap="CodeInfoResult">
+        <include refid="selectCodeInfoVo"/>
+        where id = #{id}
+    </select>
+
+    <!--查询产品编码所属的客户名称-->
+    <select id="selectCusName" resultType="java.lang.String">
+        SELECT cus_name FROM fac_customer where id = #{cusId};
+    </select>
+
+    <insert id="insertCodeInfo" parameterType="CodeInfo" useGeneratedKeys="true" keyProperty="id">
+        insert into fac_code_info
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="pnCode != null  and pnCode != ''  ">pn_code,</if>
+			<if test="pnName != null  and pnName != ''  ">pn_name,</if>
+			<if test="cusId != null  ">cus_id,</if>
+			<if test="pnRemark != null  and pnRemark != ''  ">pn_remark,</if>
+			<if test="pnPrice != null  ">pn_price,</if>
+			<if test="pnTime != null  ">pn_time,</if>
+			<if test="companyId != null  ">company_id,</if>
+			<if test="pnUnit != null  and pnUnit != ''  ">pn_unit,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="pnCode != null  and pnCode != ''  ">#{pnCode},</if>
+			<if test="pnName != null  and pnName != ''  ">#{pnName},</if>
+			<if test="cusId != null  ">#{cusId},</if>
+			<if test="pnRemark != null  and pnRemark != ''  ">#{pnRemark},</if>
+			<if test="pnPrice != null  ">#{pnPrice},</if>
+			<if test="pnTime != null  ">#{pnTime},</if>
+			<if test="companyId != null  ">#{companyId},</if>
+			<if test="pnUnit != null  and pnUnit != ''  ">#{pnUnit},</if>
+         </trim>
+    </insert>
+	 
+    <update id="updateCodeInfo" parameterType="CodeInfo">
+        update fac_code_info
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="pnCode != null  and pnCode != ''  ">pn_code = #{pnCode},</if>
+            <if test="pnName != null  and pnName != ''  ">pn_name = #{pnName},</if>
+            <if test="cusId != null  ">cus_id = #{cusId},</if>
+            <if test="pnRemark != null  and pnRemark != ''  ">pn_remark = #{pnRemark},</if>
+            <if test="pnPrice != null  ">pn_price = #{pnPrice},</if>
+            <if test="pnTime != null  ">pn_time = #{pnTime},</if>
+            <if test="companyId != null  ">company_id = #{companyId},</if>
+            <if test="pnUnit != null  and pnUnit != ''  ">pn_unit = #{pnUnit},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+	<delete id="deleteCodeInfoById" parameterType="Integer">
+        delete from fac_code_info where id = #{id}
+    </delete>
+	
+    <delete id="deleteCodeInfoByIds" parameterType="String">
+        delete from fac_code_info where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!--查询对应客户关联的产品列表-->
+    <select id="selectPnCodeListByCusId" resultMap="CodeInfoResult">
+        <include refid="selectCodeInfoVo"/>
+        where company_id = #{companyId}
+        <if test="cusId != null and cusId != ''">
+            and cus_id = #{cusId}
+        </if>
+    </select>
+
+    <!--通过客户编码查询编码信息-->
+    <select id="selectCodeInfoByPnCode" resultMap="CodeInfoResult">
+        <include refid="selectCodeInfoVo"/>
+        where pn_code = #{pnCode} limit 1;
+    </select>
+    
+</mapper>

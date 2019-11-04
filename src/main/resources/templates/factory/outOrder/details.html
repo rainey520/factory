@@ -1,0 +1,132 @@
+<!DOCTYPE HTML>
+<html  lang="zh" xmlns:th="http://www.thymeleaf.org">
+<meta charset="utf-8">
+<head th:include="include :: header"></head>
+<link th:href="@{/ajax/libs/layer/laydate/laydate.css}" rel="stylesheet"/>
+<body class="white-bg">
+<style type="text/css">
+   #purchase-detail .ibox{
+       margin-bottom: 0px;
+   }
+   #purchase-detail .ibox-content{
+       padding: 4px 20px;
+   }
+</style>
+<div class="wrapper wrapper-content animated fadeInRight ibox-content">
+    <div class="row select-table" id="purchase-detail">
+        <div class="col-sm-2"></div>
+        <input type="hidden" id="id" name="id">
+        <div class="col-sm-8 ">
+            <div id='printdivaa' class="my_show">
+                <div style="text-align: center;">
+                    <span style="font-weight: 100;font-size: 25px" th:utext="${company != null and company.comName != null ? company.comName  :'请设置公司名称'}"></span>
+                </div>
+                <div style="text-align: right;">
+                    <span style="font-size: 14px;float: right;" th:utext="'时间：'+${#dates.format(outItem.outDate,'yyyy-MM-dd')}"></span>
+                </div>
+                <div style="text-align: center;margin-top: 40px;"><span style="font-weight: 100;font-size: 22px" th:utext="${outItem != null and outItem.outMsg != null ? outItem.outMsg  :''}"></span>
+                </div>
+                <div style="width: 100%;padding:5px 20px">
+                    <div style="margin-bottom: 6px;">单号：<span th:utext="${outItem != null and outItem.outCode != null ? outItem.outCode:''}"></span></div>
+                    <div style="float: left;width: 50%;">
+                        <ul>
+                            <li style="margin-bottom: 6px;">客户名称：<span th:utext="${customer != null and customer.cusName != null ? customer.cusName:''}"></span></li>
+                            <li style="margin-bottom: 6px;">联系电话：<span th:utext="${customer != null and customer.cusPhone != null ? customer.cusPhone:''}"></span></li>
+                            <li style="margin-bottom: 6px;">联系人：<span th:utext="${customer != null and customer.cusPerson != null ? customer.cusPerson:''}"></span></li>
+                            <li style="margin-bottom: 6px;">地址：<span th:utext="${customer != null and customer.cusAddress != null ? customer.cusAddress:''}"></span></li>
+                        </ul>
+                    </div>
+                    <div style="float: left;width: 50%;">
+                        <li style="margin-bottom: 6px;">供方：<span th:utext="${company != null and company.comName != null ? company.comName:''}"></span></li>
+                        <li style="margin-bottom: 6px;">联系电话：<span th:utext="${company != null and company.comPhone != null ? company.comPhone:''}"></span></li>
+                        <li style="margin-bottom: 6px;">地址：<span th:utext="${company != null and company.comAddress != null ? company.comAddress:''}"></span></li>
+                    </div>
+                </div>
+                <div class="ibox float-e-margins">
+                        <div style="padding:5px 20px">
+                            <table class="table table-striped table-bordered table-hover " id="add-order-table">
+                                <thead>
+                                <tr>
+                                    <th>订单号</th>
+                                    <th>客户编码</th>
+                                    <th>规格描述</th>
+                                    <th>单位</th>
+                                    <th>本次出库数量</th>
+                                    <th>描述</th>
+                                </tr>
+                                </thead>
+                                <tbody id="add-purchase-table-body">
+                                <tr th:if="${not #lists.isEmpty(outItem.detailList)}" th:each="item:${outItem.detailList}">
+                                    <td th:utext="${item.orderCode}"></td>
+                                    <td th:utext="${item.pnCode}"></td>
+                                    <td th:utext="${item.pnRemark}"></td>
+                                    <td th:utext="${item.pnUnit}"></td>
+                                    <td th:utext="${item.outNumber}"></td>
+                                    <td></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                <div style="padding: 5px 20px">
+                    <div style="float: left;width: 50%;">
+                        <ul>
+                            <li>发货人：<span></span></li>
+                            <li>时间：</li>
+                        </ul>
+                    </div>
+                    <div style="float: left;width: 50%;">
+                        <ul>
+                            <li>收货人：<span></span></li>
+                            <li>时间：</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div style="clear: both"></div>
+            <div style="margin-top: 20px;text-align: center" th:if="${outItem != null and outItem.sign == 1}">
+                <a class="btn btn-primary btn-xl " href="javascript:void(0)" onclick="dayin()"><i
+                        class="fa fa-file-code-o"></i>打印</a>
+            </div>
+        <div class="col-sm-2"></div>
+    </div>
+</div>
+<div th:include="include::footer"></div>
+<script th:src="@{/ajax/libs/layer/laydate/laydate.js}"></script>
+<script th:inline="javascript">
+
+    /**
+     * 打印明细
+     * @returns {boolean}
+     */
+    function dayin(){
+        var userAgent = navigator.userAgent.toLowerCase(); //取得浏览器的userAgent字符串
+        if (userAgent.indexOf("trident") > -1){
+            alert("请使用google或者360浏览器打印");
+            return false;
+        }else if(userAgent.indexOf('msie')>-1){
+            var onlyChoseAlert = simpleAlert({
+                "content":"请使用Google或者360浏览器打印",
+                "buttons":{
+                    "确定":function () {
+                        onlyChoseAlert.close();
+                    }
+                }
+            })
+            alert("请使用google或者360浏览器打印");
+            return false;
+        }else{//其它浏览器使用lodop
+            var oldstr = document.body.innerHTML;
+            var headstr = "<html><head><title></title></head><body>";
+            var footstr = "</body>";
+            //此处id换为你自己的id
+            var printData = document.getElementById("printdivaa").innerHTML; //获得 div 里的所有 html 数据
+            document.body.innerHTML = headstr+printData+footstr;
+            window.print();
+            document.body.innerHTML = oldstr;
+        }
+    }
+</script>
+</div>
+</body>
+</html>

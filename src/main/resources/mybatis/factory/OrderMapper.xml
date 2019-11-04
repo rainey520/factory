@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.project.factory.order.mapper.OrderMapper">
+    
+    <resultMap type="Order" id="OrderResult">
+        <result property="id"    column="id"    />
+        <result property="companyId"    column="company_id"    />
+        <result property="cusId"    column="cus_id"    />
+        <result property="orderCode"    column="order_code"    />
+        <result property="status"    column="status"    />
+        <result property="deliveredNum"    column="delivered_num"    />
+        <result property="totalNumber"    column="total_number"    />
+        <result property="totalPrice"    column="total_price"    />
+        <result property="deliverTime"    column="deliver_time"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="remark"    column="remark"    />
+        <association property="cusName" column="cus_id" select="selectCusName">
+            <result property="cusName" column="cus_name"/>
+        </association>
+    </resultMap>
+	
+	<sql id="selectOrderVo">
+        select id, company_id, cus_id, order_code, status,delivered_num, total_number, total_price, deliver_time, create_time, remark from fac_order
+    </sql>
+	
+    <select id="selectOrderList" parameterType="Order" resultMap="OrderResult">
+        SELECT a.* FROM fac_order a left join fac_order_detail b on a.id = b.order_id
+        <where>  
+            <if test="id != null "> and a.id = #{id}</if>
+             <if test="companyId != null "> and a.company_id = #{companyId}</if>
+             <if test="cusId != null "> and a.cus_id = #{cusId}</if>
+             <if test="orderCode != null  and orderCode != '' "> and a.order_code like concat('%', #{orderCode},'%')</if>
+             <if test="pnCode != null  and pnCode != '' "> and b.pn_code like concat('%', #{pnCode},'%')</if>
+             <if test="status != null "> and a.status = #{status}</if>
+             <if test="createTime != null "> and a.create_time = #{createTime}</if>
+             <if test="params.beginTime != null and params.beginTime != ''"><!-- 开始时间检索 -->
+                AND date_format(a.deliver_time,'%y%m%d') &gt;= date_format(#{params.beginTime},'%y%m%d')
+             </if>
+             <if test="params.endTime != null and params.endTime != ''"><!-- 结束时间检索 -->
+                AND date_format(a.deliver_time,'%y%m%d') &lt;= date_format(#{params.endTime},'%y%m%d')
+             </if>
+         </where>
+        group by a.id,a.company_id,a.order_code,a.status,a.delivered_num,a.total_number,a.total_price,a.deliver_time,a.create_time,a.remark
+    </select>
+
+    <!--查询产品编码所属的客户名称-->
+    <select id="selectCusName" resultType="java.lang.String">
+        SELECT cus_name FROM fac_customer where id = #{cusId};
+    </select>
+
+    <select id="selectOrderById" parameterType="Integer" resultMap="OrderResult">
+        <include refid="selectOrderVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertOrder" parameterType="Order" useGeneratedKeys="true" keyProperty="id">
+        insert into fac_order
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="companyId != null  ">company_id,</if>
+			<if test="cusId != null  ">cus_id,</if>
+			<if test="orderCode != null  and orderCode != ''  ">order_code,</if>
+			<if test="status != null  ">status,</if>
+            <if test="deliveredNum != null  ">delivered_num,</if>
+			<if test="totalNumber != null  ">total_number,</if>
+			<if test="totalPrice != null  ">total_price,</if>
+			<if test="deliverTime != null  ">deliver_time,</if>
+			<if test="createTime != null  ">create_time,</if>
+			<if test="remark != null  and remark != ''  ">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="companyId != null  ">#{companyId},</if>
+			<if test="cusId != null  ">#{cusId},</if>
+			<if test="orderCode != null  and orderCode != ''  ">#{orderCode},</if>
+			<if test="status != null  ">#{status},</if>
+            <if test="deliveredNum != null  ">#{deliveredNum},</if>
+			<if test="totalNumber != null  ">#{totalNumber},</if>
+			<if test="totalPrice != null  ">#{totalPrice},</if>
+			<if test="deliverTime != null  ">#{deliverTime},</if>
+			<if test="createTime != null  ">#{createTime},</if>
+			<if test="remark != null  and remark != ''  ">#{remark},</if>
+         </trim>
+    </insert>
+	 
+    <update id="updateOrder" parameterType="Order">
+        update fac_order
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="companyId != null  ">company_id = #{companyId},</if>
+            <if test="cusId != null  ">cus_id = #{cusId},</if>
+            <if test="orderCode != null  and orderCode != ''  ">order_code = #{orderCode},</if>
+            <if test="status != null  ">status = #{status},</if>
+            <if test="deliveredNum != null  ">delivered_num = #{deliveredNum},</if>
+            <if test="totalNumber != null  ">total_number = #{totalNumber},</if>
+            <if test="totalPrice != null  ">total_price = #{totalPrice},</if>
+            <if test="deliverTime != null  ">deliver_time = #{deliverTime},</if>
+            <if test="createTime != null  ">create_time = #{createTime},</if>
+            <if test="remark != null  and remark != ''  ">remark = #{remark},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+	<delete id="deleteOrderById" parameterType="Integer">
+        delete from fac_order where id = #{id}
+    </delete>
+	
+    <delete id="deleteOrderByIds" parameterType="String">
+        delete from fac_order where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!--通过客户id查询还未交付的订单列表-->
+    <select id="selectOrderListByCusId" resultMap="OrderResult">
+        <include refid="selectOrderVo"/>
+        where status != 2 and company_id = #{companyId} and cus_id = #{cusId}
+    </select>
+
+    <!--通过订单号查询订单信息-->
+    <select id="selectOrderByOrderCode" resultMap="OrderResult">
+        <include refid="selectOrderVo"/>
+        where order_code = #{orderCode} and company_id = #{companyId} limit 1;
+    </select>
+
+    <!--查询未关闭的订单-->
+    <select id="selectOrderNoClose" resultMap="OrderResult">
+        <include refid="selectOrderVo"/>
+        where status != #{status} and company_id = #{companyId}
+    </select>
+
+    <!--查询公司所有的订单信息-->
+    <select id="selectOrderListByComId" resultMap="OrderResult">
+        <include refid="selectOrderVo"/>
+        where company_id = #{companyId}
+    </select>
+    
+</mapper>

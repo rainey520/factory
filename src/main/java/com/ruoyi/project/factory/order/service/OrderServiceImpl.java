@@ -1,0 +1,206 @@
+package com.ruoyi.project.factory.order.service;
+
+import com.ruoyi.common.constant.OrderConstants;
+import com.ruoyi.common.constant.UserConstants;
+import com.ruoyi.common.exception.BusinessException;
+import com.ruoyi.common.support.Convert;
+import com.ruoyi.common.utils.StringUtils;
+import com.ruoyi.framework.jwt.JwtUtil;
+import com.ruoyi.project.factory.order.domain.Order;
+import com.ruoyi.project.factory.order.mapper.OrderMapper;
+import com.ruoyi.project.factory.orderDetail.domain.OrderDetail;
+import com.ruoyi.project.factory.orderDetail.mapper.OrderDetailMapper;
+import com.ruoyi.project.system.user.domain.User;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+
+/**
+ * 订单主 服务层实现
+ *
+ * @author sj
+ * @date 2019-10-31
+ */
+@Service("order")
+public class OrderServiceImpl implements IOrderService {
+    @Autowired
+    private OrderMapper orderMapper;
+
+    @Autowired
+    private OrderDetailMapper orderDetailMapper;
+
+    /**
+     * 查询订单主信息
+     *
+     * @param id 订单主ID
+     * @return 订单主信息
+     */
+    @Override
+    public Order selectOrderById(Integer id) {
+        return orderMapper.selectOrderById(id);
+    }
+
+    /**
+     * 查询订单主列表
+     *
+     * @param order 订单主信息
+     * @return 订单主集合
+     */
+    @Override
+    public List<Order> selectOrderList(Order order) {
+        return orderMapper.selectOrderList(order);
+    }
+
+    /**
+     * 新增订单主
+     *
+     * @param order 订单主信息
+     * @return 结果
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int insertOrder(Order order) {
+        User user = JwtUtil.getUser();
+        if (user == null) {
+            throw new BusinessException(UserConstants.NOT_LOGIN);
+        }
+        // 查询订单号是否重复
+        if (order != null && StringUtils.isNotEmpty(order.getOrderCode())) {
+            Order uniOrder = orderMapper.selectOrderByOrderCode(user.getCompanyId(), order.getOrderCode());
+            if (uniOrder != null) {
+                throw new BusinessException("订单重复,请重新输入");
+            }
+        }
+        order.setCompanyId(user.getCompanyId());
+        order.setCreateTime(new Date());
+        order.setStatus(OrderConstants.UN_DELIVERED);
+        // 添加主表
+        orderMapper.insertOrder(order);
+        //订单总数量
+        int totalNum =0;
+        //订单总金额
+        float totalPrice = 0F;
+        if (StringUtils.isNotEmpty(order.getDetailList())) {
+            for (OrderDetail orderDetail : order.getDetailList()) {
+                orderDetail.setCompanyId(user.getCompanyId());
+                orderDetail.setUndeliveredNum(orderDetail.getTotalNum());
+                orderDetail.setOrderId(order.getId());
+                totalNum += orderDetail.getTotalNum();
+                totalPrice += orderDetail.getTotalPrice();
+                orderDetailMapper.insertOrderDetail(orderDetail);
+            }
+        }
+        order.setTotalNumber(totalNum);
+        order.setTotalPrice(totalPrice);
+        return orderMapper.updateOrder(order);
+    }
+
+    /**
+     * 修改订单主
+     *
+     * @param order 订单主信息
+     * @return 结果
+     */
+    @Override
+    public int updateOrder(Order order) {
+        return orderMapper.updateOrder(order);
+    }
+
+    /**
+     * 删除订单主对象
+     *
+     * @param ids 需要删除的数据ID
+     * @return 结果
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int deleteOrderByIds(String ids) {
+        orderDetailMapper.deleteOrderDetailByOrderIds(Convert.toStrArray(ids));
+        return orderMapper.deleteOrderByIds(Convert.toStrArray(ids));
+    }
+
+    /**
+     * 通过客户id查询对应的订单列表
+     * @param cusId 客户id
+     * @return 结果
+     */
+    @Override
+    public List<Order> selectOrderListByCusId(Integer cusId) {
+        User user = JwtUtil.getUser();
+        if (user == null) {
+            return Collections.emptyList();
+        }
+        return orderMapper.selectOrderListByCusId(user.getCompanyId(),cusId);
+    }
+
+    /**
+     * 校验订单唯一性
+     * @param order 订单信息
+     * @return 结果
+     */
+    @Override
+    public String checkOrderCode(Order order) {
+        User user = JwtUtil.getUser();
+        if (user == null) {
+            return OrderConstants.NAME_NOT_UNIQUE;
+        }
+        Order uniOrder = orderMapper.selectOrderByOrderCode(user.getCompanyId(),order.getOrderCode());
+        if (uniOrder != null && !uniOrder.getId().equals(order.getId())) {
+            return OrderConstants.NAME_NOT_UNIQUE;
+        }
+        return OrderConstants.NAME_UNIQUE;
+    }
+
+    /**
+     * 关闭订单
+     * @param order 订单信息
+     * @return 结果
+     */
+    @Override
+    public int closeOrder(Order order) {
+        User user = JwtUtil.getUser();
+        if (user == null) {
+            throw new BusinessException(UserConstants.NOT_LOGIN);
+        }
+        if (order != null) {
+            Order uniOrder = orderMapper.selectOrderById(order.getId());
+            if (uniOrder == null) {
+                throw new BusinessException("订单不存在或被删除");
+            }
+            if (uniOrder.getTotalNumber() > uniOrder.getDeliveredNum()) {
+                throw new BusinessException("该订单未完全交付,不能关闭");
+            }
+            uniOrder.setStatus(OrderConstants.DELIVERED);
+            return orderMapper.updateOrder(uniOrder);
+        }
+        return 0;
+    }
+
+    /**
+     * 查询未关闭的订单
+     * @return 结果
+     */
+    public List<Order> selectOrderNoClose(){
+        User user = JwtUtil.getUser();
+        if (user == null) {
+            return Collections.emptyList();
+        }
+        return orderMapper.selectOrderNoClose(user.getCompanyId(),OrderConstants.DELIVERED);
+    }
+
+    /**
+     * 查询公司所有的订单信息
+     * @return 订单信息
+     */
+    public List<Order> selectOrderListByComId(){
+        User user = JwtUtil.getUser();
+        if (user == null) {
+            return Collections.emptyList();
+        }
+        return orderMapper.selectOrderListByComId(user.getCompanyId());
+    }
+}

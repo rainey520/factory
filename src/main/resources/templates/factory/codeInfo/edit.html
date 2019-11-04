@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html  lang="zh" xmlns:th="http://www.thymeleaf.org">
+<meta charset="utf-8">
+<head th:include="include :: header"></head>
+<body class="white-bg">
+    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+        <form class="form-horizontal m" id="form-codeInfo-edit" th:object="${codeInfo}">
+            <input id="id" name="id" th:field="*{id}"  type="hidden">
+			<div class="form-group">	
+				<label class="col-sm-3 control-label">客户编码：</label>
+				<div class="col-sm-8">
+					<input id="pnCode" name="pnCode" th:field="*{pnCode}" class="form-control" type="text">
+				</div>
+			</div>
+			<div class="form-group">	
+				<label class="col-sm-3 control-label">编码名称：</label>
+				<div class="col-sm-8">
+					<input id="pnName" name="pnName" th:field="*{pnName}" class="form-control" type="text">
+				</div>
+			</div>
+			<div class="form-group">	
+				<label class="col-sm-3 control-label">所属客户：</label>
+				<div class="col-sm-8">
+					<select id="cusId" name="cusId" class="form-control"
+							th:with="cusList=${@customer.selectCustomerListByComId(1)}">
+						<option th:each="item:${cusList}" th:text="${item.cusName}" th:value="${item.id}"  th:field="*{cusId}"></option>
+					</select>
+				</div>
+			</div>
+			<div class="form-group">	
+				<label class="col-sm-3 control-label">编码描述：</label>
+				<div class="col-sm-8">
+					<input id="pnRemark" name="pnRemark" th:field="*{pnRemark}" class="form-control" type="text">
+				</div>
+			</div>
+			<div class="form-group">	
+				<label class="col-sm-3 control-label">单价：</label>
+				<div class="col-sm-8">
+					<input id="pnPrice" name="pnPrice" th:field="*{pnPrice}" class="form-control" type="text">
+				</div>
+			</div>
+			<div class="form-group">	
+				<label class="col-sm-3 control-label">单位：</label>
+				<div class="col-sm-8">
+					<input id="pnUnit" name="pnUnit" th:field="*{pnUnit}" class="form-control" type="text">
+				</div>
+			</div>
+		</form>
+    </div>
+    <div th:include="include::footer"></div>
+    <script type="text/javascript">
+		var prefix = ctx + "factory/codeInfo";
+		$("#form-codeInfo-edit").validate({
+			rules:{
+				pnCode: {
+					required: true,
+					remote: {
+						url: prefix + "/checkPnCode",
+						type: "post",
+						dataType: "json",
+						data: {
+							name : function() {
+								return $.common.trim($("#pnCode").val());
+							},
+							id : function() {
+								return $.common.trim($("#id").val());
+							}
+						},
+						dataFilter: function(data, type) {
+							return $.validate.unique(data);
+						}
+					}
+				},
+				pnPrice: {
+					required: true,
+				},
+				pnRemark: {
+					required: true,
+				},
+			},
+			messages: {
+				pnCode: {
+					remote: "客户编码已存在"
+				},
+			}
+		});
+		
+		function submitHandler() {
+	        if ($.validate.form()) {
+	            $.operate.save(prefix + "/edit", $('#form-codeInfo-edit').serialize());
+	        }
+	    }
+	</script>
+</body>
+</html>

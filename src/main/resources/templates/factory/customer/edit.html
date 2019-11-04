@@ -1,0 +1,104 @@
+<!DOCTYPE HTML>
+<html  lang="zh" xmlns:th="http://www.thymeleaf.org">
+<meta charset="utf-8">
+<head th:include="include :: header"></head>
+<body class="white-bg">
+    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+        <form class="form-horizontal m" id="form-customer-edit" th:object="${customer}">
+            <input id="id" name="id" th:field="*{id}"  type="hidden">
+			<div class="form-group">	
+				<label class="col-sm-3 control-label">公司名称：</label>
+				<div class="col-sm-8">
+					<input id="cusName" name="cusName" th:field="*{cusName}" class="form-control" type="text">
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">公司类型：</label>
+				<div class="col-sm-8">
+					<select id="cusType" name="cusType" class="form-control" th:field="*{cusType}" >
+						<option value="">请选择</option>
+						<option value="1">客户</option>
+						<option value="2">外加工</option>
+					</select>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">联系人：</label>
+				<div class="col-sm-8">
+					<input id="cusPerson" name="cusPerson" th:field="*{cusPerson}" class="form-control" type="text">
+				</div>
+			</div>
+			<div class="form-group">	
+				<label class="col-sm-3 control-label">联系方式：</label>
+				<div class="col-sm-8">
+					<input id="cusPhone" name="cusPhone" th:field="*{cusPhone}" class="form-control" type="text">
+				</div>
+			</div>
+			<div class="form-group">	
+				<label class="col-sm-3 control-label">客户地址：</label>
+				<div class="col-sm-8">
+					<input id="cusAddress" name="cusAddress" th:field="*{cusAddress}" class="form-control" type="text">
+				</div>
+			</div>
+			<div class="form-group">	
+				<label class="col-sm-3 control-label">结款期限：</label>
+				<div class="col-sm-8">
+					<input id="cusPayDate" name="cusPayDate" th:field="*{cusPayDate}" class="form-control" type="text">
+				</div>
+			</div>
+		</form>
+    </div>
+    <div th:include="include::footer"></div>
+    <script type="text/javascript">
+		var prefix = ctx + "factory/customer";
+		$("#form-customer-edit").validate({
+			rules:{
+				cusName:{
+					required:true,
+					remote: {
+						url: prefix + "/checkCusName",
+						type: "post",
+						dataType: "json",
+						data: {
+							name : function() {
+								return $.common.trim($("#cusName").val());
+							},
+							id : function() {
+								return $.common.trim($("#id").val());
+							}
+						},
+						dataFilter: function(data, type) {
+							return $.validate.unique(data);
+						}
+					}
+				},
+				cusPerson:{
+					required:true,
+				},
+				cusPhone:{
+					required:true,
+				},
+				cusAddress:{
+					required:true,
+				},
+			},
+			messages: {
+				"cusName": {
+					remote: "客户名称已存在"
+				},
+			}
+		});
+		
+		function submitHandler() {
+	        if ($.validate.form()) {
+				var cusType = $("#cusType").find("option:selected").val();
+				if ($.common.isEmpty(cusType)) {
+					$.modal.alertWarning("请选择公司的类型");
+					return;
+				}
+	            $.operate.save(prefix + "/edit", $('#form-customer-edit').serialize());
+	        }
+	    }
+	</script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head th:include="include :: header"></head>
+<link th:href="@{/ajax/libs/jquery-layout/jquery.layout-latest.css}" rel="stylesheet"/>
+<body class="gray-bg">
+    
+     <div class="container-div">
+		<div class="row">
+			<div class="col-sm-12 search-collapse">
+				<form id="formId">
+					<div class="select-list">
+						<ul>
+							<li>
+								所属客户：
+								<select id="cusId" name="cusId"
+										th:with="cusList=${@customer.selectCustomerListByComId(null)}">
+									<option value="">请选择</option>
+									<option th:each="item:${cusList}" th:text="${item.cusName}"
+											th:value="${item.id}"></option>
+								</select>
+							</li>
+							<li>
+								出货单号：<input type="text" name="outCode" style="width: 200px"/>
+							</li>
+							<li>
+								订单号：
+								<select  name="orderCode" id="orderCode" th:with="orderList=${@order.selectOrderListByComId()}">
+									<option value="">请选择</option>
+									<option th:each="item:${orderList}" th:text="${item.orderCode}" th:value="${item.orderCode}"></option>
+								</select>
+							</li>
+							<li>
+								客户编码：
+								<select name="pnCode" id="pnCode" th:with="pnList=${@codeInfo.selectPnCodeList()}">
+									<option value="">请选择</option>
+									<option th:each="item:${pnList}" th:text="${item.pnCode}" th:value="${item.pnCode}"></option>
+								</select>
+							</li>
+
+							<li>
+								类型：
+								<select id="outType" name="outType" style="width: 130px">
+									<option value="">请选择</option>
+									<option value="0">客户出货单</option>
+									<option value="1">客户退货单</option>
+									<option value="2">外加工出库单</option>
+									<option value="3">外加工入库单</option>
+								</select>
+							</li>
+							<li class="select-time">
+								<label>创建时间： </label>
+								<input type="text" class="time-input" id="startTime" placeholder="开始时间"
+									   name="params[beginTime]"/>
+								<span>-</span>
+								<input type="text" class="time-input" id="endTime" placeholder="结束时间"
+									   name="params[endTime]"/>
+							</li>
+
+							<li>
+								<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+								<a class="btn btn-warning btn-rounded btn-sm" onclick="formReset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+							</li>
+						</ul>
+					</div>
+				</form>
+			</div>
+			
+	        <div class="btn-group-sm hidden-xs" id="toolbar" role="group">
+				<select id="checkType" style="width: 120px;height: 30px;">
+					<option value="">请选择</option>
+					<option value="0">客户出货单</option>
+					<option value="1">客户退货单</option>
+					<option value="2">外加工出库单</option>
+					<option value="3">外加工入库单</option>
+				</select>
+				<a class="btn btn-success" onclick="addOutOrder()" shiro:hasPermission="factory:outOrder:add">
+					<i class="fa fa-plus"></i> 添加
+				</a>
+			</div>
+			<div class="col-sm-12 select-table table-striped">
+				<table id="bootstrap-table" data-mobile-responsive="true"></table>
+			</div>
+		</div>
+	</div>
+    <div th:include="include :: footer"></div>
+	 <script th:src="@{/ajax/libs/jquery-layout/jquery.layout-latest.js}"></script>
+    <script th:inline="javascript">
+        var editFlag = [[${@permission.hasPermi('factory:outOrder:add')}]];
+        var removeFlag = [[${@permission.hasPermi('factory:outOrder:remove')}]];
+        var prefix = ctx + "factory/outOrder";
+
+
+		$(function () {
+			$("#cusId").select2({
+				width:"200px",
+			});
+			$("#pnCode").select2({
+				width:"200px",
+			});
+			$("#orderCode").select2({
+				width:"200px",
+			});
+		});
+		// 重置搜索表单信息
+		function formReset() {
+			$('#formId')[0].reset();//input标签重置
+			$("#cusId").val(null).trigger("change"); // select2标签重置
+			$("#pnCode").val(null).trigger("change"); // select2标签重置
+			$("#orderCode").val(null).trigger("change"); // select2标签重置
+		}
+        $(function() {
+            var options = {
+                url: prefix + "/list",
+                createUrl: prefix + "/add",
+                updateUrl: prefix + "/edit/{id}",
+                removeUrl: prefix + "/remove",
+				exportUrl: prefix + "/export",
+                modalName: "出库单",
+				search: false,
+		        showExport: true,
+				sortName:'outTime',
+				sortOrder:'desc',
+                columns: [
+				{
+					field : 'id', 
+					title : '出库单主表id',
+					visible: false
+				},
+				{
+					field : 'cusId', 
+					title : '所属客户',
+					sortable: true,
+					formatter:function (value, row, index) {
+						return row.cusName;
+					}
+				},
+				{
+					field : 'outCode', 
+					title : '出货单号',
+					sortable: true
+				},
+				{
+					field : 'outType', 
+					title : '类型',
+					sortable: true,
+					formatter:function (value, row, index) {
+						if (value == 0) {
+						    return '<span style="font-weight: bold;color: blue">客户出货单</span>';
+						} else if (value == 1) {
+							return '<span style="font-weight: bold;color: red">客户退货单</span>';
+						} else if (value == 2) {
+							return '<span style="font-weight: bold;color: #0a0a0a">外加工出库单</span>';
+						} else {
+							return '<span style="font-weight: bold;color: #0a0a0a">外加工入库单</span>';
+						}
+					}
+				},
+				{
+					field : 'outNum',
+					title : '出货数量',
+					sortable: true
+				},
+				{
+					field : 'outPrice',
+					title : '出货价格',
+					sortable: true
+				},
+				{
+					field : 'outTime', 
+					title : '创建日期',
+					sortable: true
+				},
+		        {
+		            title: '操作',
+		            align: 'center',
+		            formatter: function(value, row, index) {
+		            	var actions = [];
+		            	actions.push('<a class="btn btn-success btn-xs ' + editFlag + '" href="javascript:void(0)" onclick="showOutOrderDetail(\'' + row.id + '\')"><i class="fa fa-eye"></i>详情</a> ');
+		            	if (row.status == 0) {
+							actions.push('<a class="btn btn-warning btn-xs ' + editFlag + '" href="javascript:void(0)" onclick="confirmOutOrder(\'' + row.id + '\')"><i></i>待确认</a> ');
+							actions.push('<a class="btn btn-danger btn-xs ' + removeFlag + '" href="javascript:void(0)" onclick="$.operate.remove(\'' + row.id + '\')"><i class="fa fa-remove"></i>删除</a>');
+		            	} else {
+							actions.push('<a class="btn btn-primary btn-xs ' + editFlag + '" href="javascript:void(0)" disabled="true"><i></i>已确认</a> ');
+							actions.push('<a class="btn btn-danger btn-xs ' + removeFlag + '" href="javascript:void(0)" disabled="true"><i class="fa fa-remove"></i>删除</a>');
+						}
+						return actions.join('');
+		            }
+		        }]
+            };
+            $.table.init(options);
+        });
+
+		/**
+		 * 添加出货单
+		 */
+		function addOutOrder() {
+			var outType = $("#checkType").find("option:selected").val();
+			if ($.common.isEmpty(outType)) {
+			    $.modal.alertWarning("请选择类型");
+			    return;
+			}
+			// 客户出库单
+			if (outType == 0) {
+				createMenuItem(prefix + "/cusOut?outType=" + outType, "客户出库");
+				// 客户退货单
+			} else if (outType == 1) {
+				createMenuItem(prefix + "/cusBack?outType=" + outType, "客户退货");
+				// 外加工出入单
+			} else {
+				createMenuItem(prefix + "/handOut?outType=" + outType, "外加工处理");
+			}
+		}
+
+		/**
+		 * 确认操作，不可删除
+		 */
+		function confirmOutOrder(id) {
+			$.modal.confirm("是否确认该条数据信息，确认后不可更改删除",function (res) {
+				if (res) {
+					var data = {
+						id:id
+					};
+					$.operate.post(prefix + "/confirmOutOrder",data);
+				}
+			})
+		}
+
+		/**
+		 * 查看明细
+		 */
+		function showOutOrderDetail(id) {
+			createMenuItem(prefix + "/showOutOrderDetail?id=" + id, "明细信息");
+		}
+    </script>
+</body>
+</html>

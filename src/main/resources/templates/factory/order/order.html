@@ -1,0 +1,220 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head th:include="include :: header"></head>
+<link th:href="@{/ajax/libs/jquery-layout/jquery.layout-latest.css}" rel="stylesheet"/>
+<body class="gray-bg">
+
+<div class="container-div">
+    <div class="row">
+        <div class="col-sm-12 search-collapse">
+            <form id="formId">
+                <div class="select-list">
+                    <ul>
+                        <li>
+                            所属客户：
+                            <select id="cusId" name="cusId"
+                                    th:with="cusList=${@customer.selectCustomerListByComId(1)}">
+                                <option value="">请选择</option>
+                                <option th:each="item:${cusList}" th:text="${item.cusName}"
+                                        th:value="${item.id}"></option>
+                            </select>
+                        </li>
+
+                        <li>
+                            订单号：
+                            <select  name="orderCode" id="orderCode" th:with="orderList=${@order.selectOrderListByComId()}">
+                                <option value="">请选择</option>
+                                <option th:each="item:${orderList}" th:text="${item.orderCode}" th:value="${item.orderCode}"></option>
+                            </select>
+                        </li>
+                        <li>
+                            客户编码：
+                            <select name="pnCode" id="pnCode" th:with="pnList=${@codeInfo.selectPnCodeList()}">
+                                <option value="">请选择</option>
+                                <option th:each="item:${pnList}" th:text="${item.pnCode}" th:value="${item.pnCode}"></option>
+                            </select>
+                        </li>
+
+                        <li>
+                            订单状态：
+                            <select id="status" name="status" style="width: 80px">
+                                <option value="">请选择</option>
+                                <option value="0">未交付</option>
+                                <option value="1">交付中</option>
+                                <option value="2">已关闭</option>
+                            </select>
+                        </li>
+
+                        <li class="select-time">
+                            <label>交付时间： </label>
+                            <input type="text" class="time-input" id="startTime" placeholder="开始时间"
+                                   name="params[beginTime]"/>
+                            <span>-</span>
+                            <input type="text" class="time-input" id="endTime" placeholder="结束时间"
+                                   name="params[endTime]"/>
+                        </li>
+
+                        <li>
+                            <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i
+                                    class="fa fa-search"></i>&nbsp;搜索</a>
+                            <a class="btn btn-warning btn-rounded btn-sm" onclick="formReset()"><i
+                                    class="fa fa-refresh"></i>&nbsp;重置</a>
+                        </li>
+                    </ul>
+                </div>
+            </form>
+        </div>
+
+        <div class="btn-group-sm hidden-xs" id="toolbar" role="group">
+            <a class="btn btn-success" onclick="addOrder()" shiro:hasPermission="factory:order:add">
+                <i class="fa fa-plus"></i> 添加
+            </a>
+        </div>
+        <div class="col-sm-12 select-table table-striped">
+            <table id="bootstrap-table" data-mobile-responsive="true"></table>
+        </div>
+    </div>
+</div>
+<div th:include="include :: footer"></div>
+<script th:src="@{/ajax/libs/jquery-layout/jquery.layout-latest.js}"></script>
+<script th:inline="javascript">
+    var listFlag = [[${@permission.hasPermi('factory:order:list')}]];
+    var removeFlag = [[${@permission.hasPermi('factory:order:remove')}]];
+    var prefix = ctx + "factory/order";
+
+    $(function () {
+        $("#cusId").select2({
+            width:"200px",
+        });
+        $("#pnCode").select2({
+            width:"200px",
+        });
+        $("#orderCode").select2({
+            width:"200px",
+        });
+    });
+
+    // 重置搜索表单信息
+    function formReset() {
+        $('#formId')[0].reset();//input标签重置
+        $("#cusId").val(null).trigger("change"); // select2标签重置
+        $("#pnCode").val(null).trigger("change"); // select2标签重置
+        $("#orderCode").val(null).trigger("change"); // select2标签重置
+    }
+    $(function () {
+        var options = {
+            url: prefix + "/list",
+            createUrl: prefix + "/add",
+            updateUrl: prefix + "/edit/{id}",
+            removeUrl: prefix + "/remove",
+            exportUrl: prefix + "/export",
+            modalName: "订单主",
+            search: false,
+            showExport: true,
+            columns: [
+                {
+                    field: 'id',
+                    title: '订单主键',
+                    visible: false
+                },
+                {
+                    field: 'cusId',
+                    title: '所属客户',
+                    sortable: true,
+                    formatter: function (value, row, index) {
+                        return row.cusName;
+                    }
+                },
+                {
+                    field: 'orderCode',
+                    title: '订单号',
+                    sortable: true
+                },
+                {
+                    field: 'status',
+                    title: '订单状态',
+                    sortable: true,
+                    formatter:function (value, row, index) {
+                        if (value == 0) {
+                            return '<span style="font-weight: bold;color: blue">未交付</span>'
+                        } else if (value == 1) {
+                            return '<span style="font-weight: bold;color: red">交付中</span>'
+                        } else if (value == 2) {
+                            return '<span style="font-weight: bold;color: #00a65a">已关闭</span>'
+                        }
+                    }
+                },
+                {
+                    field: '',
+                    title: '已交数/总数',
+                    formatter:function (value, row, index) {
+                        return '<span style="font-weight: bold;color: green">'+ row.deliveredNum +'</span><span style="font-weight: bold">/</span>' +
+                            '<span style="font-weight: bold;color: red">'+ row.totalNumber+'</span>';
+                    }
+                },
+                {
+                    field: 'totalPrice',
+                    title: '订单总金额',
+                    sortable: true
+                },
+                {
+                    field: 'deliverTime',
+                    title: '订单交付日期',
+                    sortable: true
+                },
+                {
+                    field: 'remark',
+                    title: '订单备注',
+                    sortable: true
+                },
+                {
+                    title: '操作',
+                    align: 'center',
+                    formatter: function (value, row, index) {
+                        var actions = [];
+                        actions.push('<a class="btn btn-warning btn-xs ' + listFlag + '" href="#" onclick="showOrderDetail(\'' + row.id + '\')"><i class="fa fa-eye"></i>明细</a> ');
+                        if (row.status == 1) {
+                            actions.push('<a class="btn btn-primary btn-xs ' + removeFlag + '" href="#" onclick="closeOrder(\'' + row.id + '\')"><i class="fa fa-minus-square-o"></i>关闭</a> ');
+                        } else {
+                            actions.push('<a class="btn btn-primary btn-xs ' + removeFlag + '" disabled="true"><i class="fa fa-minus-square-o"></i>关闭</a> ');
+                        }
+                        if (row.status == 0) {
+                            actions.push('<a class="btn btn-danger btn-xs ' + removeFlag + '" href="#" onclick="$.operate.remove(\'' + row.id + '\')"><i class="fa fa-remove"></i>删除</a> ');
+                        } else {
+                            actions.push('<a class="btn btn-danger btn-xs ' + removeFlag + '" href="#" disabled="true"><i class="fa fa-remove"></i>删除</a> ');
+                        }
+                        return actions.join('');
+                    }
+                }]
+        };
+        $.table.init(options);
+    });
+
+    /**
+     * 添加订单
+     */
+    function addOrder() {
+        createMenuItem(prefix + "/add", "订单下单");
+    }
+
+    /**
+     * 查看订单明细
+     */
+    function showOrderDetail(id) {
+        var url = prefix + "/detail?id=" + id;
+        $.modal.open("订单明细",url,800,400);
+    }
+
+    /**
+     * 关闭订单
+     */
+    function closeOrder(id) {
+        $.modal.confirm("确认关闭该订单吗？",function (res) {
+            var data = {id:id};
+            $.operate.post(prefix + "/closeOrder",data);
+        })
+    }
+</script>
+</body>
+</html>

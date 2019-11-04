@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.project.factory.customer.mapper.CustomerMapper">
+    
+    <resultMap type="Customer" id="CustomerResult">
+        <result property="id"    column="id"    />
+        <result property="cusName"    column="cus_name"    />
+        <result property="cusPhone"    column="cus_phone"    />
+        <result property="cusPerson"    column="cus_person"    />
+        <result property="cusAddress"    column="cus_address"    />
+        <result property="cusPayDate"    column="cus_pay_date"    />
+        <result property="companyId"    column="company_id"    />
+        <result property="cusType"    column="cus_type"    />
+    </resultMap>
+	
+	<sql id="selectCustomerVo">
+        select id, cus_name, cus_phone, cus_person, cus_address, cus_pay_date,company_id,cus_type from fac_customer
+    </sql>
+	
+    <select id="selectCustomerList" parameterType="Customer" resultMap="CustomerResult">
+        <include refid="selectCustomerVo"/>
+        <where>  
+            <if test="id != null "> and id = #{id}</if>
+             <if test="cusName != null  and cusName != '' "> and cus_name = #{cusName}</if>
+             <if test="cusPhone != null  and cusPhone != '' "> and cus_phone like concat('%',#{cusPhone},'%')</if>
+             <if test="cusPerson != null  and cusPerson != '' "> and cus_person like concat ('%', #{cusPerson},'%')</if>
+             <if test="cusAddress != null  and cusAddress != '' "> and cus_address = #{cusAddress}</if>
+             <if test="cusPayDate != null  and cusPayDate != '' "> and cus_pay_date = #{cusPayDate}</if>
+             <if test="companyId != null  and companyId != '' "> and company_id = #{companyId}</if>
+             <if test="cusType != null  and cusType != '' "> and cus_type = #{cusType}</if>
+         </where>
+    </select>
+    
+    <select id="selectCustomerById" parameterType="Integer" resultMap="CustomerResult">
+        <include refid="selectCustomerVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertCustomer" parameterType="Customer" useGeneratedKeys="true" keyProperty="id">
+        insert into fac_customer
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="cusName != null  and cusName != ''  ">cus_name,</if>
+			<if test="cusPhone != null  and cusPhone != ''  ">cus_phone,</if>
+			<if test="cusPerson != null  and cusPerson != ''  ">cus_person,</if>
+			<if test="cusAddress != null  and cusAddress != ''  ">cus_address,</if>
+			<if test="cusPayDate != null  and cusPayDate != ''  ">cus_pay_date,</if>
+            <if test="companyId != null  and companyId != ''  ">company_id,</if>
+            <if test="cusType != null  and cusType != ''  ">cus_type,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="cusName != null  and cusName != ''  ">#{cusName},</if>
+			<if test="cusPhone != null  and cusPhone != ''  ">#{cusPhone},</if>
+			<if test="cusPerson != null  and cusPerson != ''  ">#{cusPerson},</if>
+			<if test="cusAddress != null  and cusAddress != ''  ">#{cusAddress},</if>
+			<if test="cusPayDate != null  and cusPayDate != ''  ">#{cusPayDate},</if>
+            <if test="companyId != null  and companyId != ''  ">#{companyId},</if>
+            <if test="cusType != null  and cusType != ''  ">#{cusType},</if>
+         </trim>
+    </insert>
+	 
+    <update id="updateCustomer" parameterType="Customer">
+        update fac_customer
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="cusName != null  and cusName != ''  ">cus_name = #{cusName},</if>
+            <if test="cusPhone != null  and cusPhone != ''  ">cus_phone = #{cusPhone},</if>
+            <if test="cusPerson != null  and cusPerson != ''  ">cus_person = #{cusPerson},</if>
+            <if test="cusAddress != null  and cusAddress != ''  ">cus_address = #{cusAddress},</if>
+            <if test="cusPayDate != null  and cusPayDate != ''  ">cus_pay_date = #{cusPayDate},</if>
+            <if test="cusType != null  and cusType != ''  ">cus_type = #{cusType},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+	<delete id="deleteCustomerById" parameterType="Integer">
+        delete from fac_customer where id = #{id}
+    </delete>
+	
+    <delete id="deleteCustomerByIds" parameterType="String">
+        delete from fac_customer where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!--查询公司的客户列表-->
+    <select id="selectCustomerListByComId" resultMap="CustomerResult">
+        <include refid="selectCustomerVo"/>
+        where company_id = #{companyId}
+        <if test="cusType != null and cusType != ''">
+            and cus_type = #{cusType}
+        </if>
+    </select>
+
+    <!--通过客户名称查询客户-->
+    <select id="checkCusName" resultMap="CustomerResult">
+        <include refid="selectCustomerVo"/>
+        where company_id = #{companyId} and cus_name = #{cusName} limit 1;
+    </select>
+    
+</mapper>

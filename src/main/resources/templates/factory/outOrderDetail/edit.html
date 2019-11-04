@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html  lang="zh" xmlns:th="http://www.thymeleaf.org">
+<meta charset="utf-8">
+<head th:include="include :: header"></head>
+<body class="white-bg">
+    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+        <form class="form-horizontal m" id="form-outOrderDetail-edit" th:object="${outOrderDetail}">
+            <input id="id" name="id" th:field="*{id}"  type="hidden">
+			<div class="form-group">	
+				<label class="col-sm-3 control-label">公司id：</label>
+				<div class="col-sm-8">
+					<input id="companyId" name="companyId" th:field="*{companyId}" class="form-control" type="text">
+				</div>
+			</div>
+			<div class="form-group">	
+				<label class="col-sm-3 control-label">客户id：</label>
+				<div class="col-sm-8">
+					<input id="cusId" name="cusId" th:field="*{cusId}" class="form-control" type="text">
+				</div>
+			</div>
+			<div class="form-group">	
+				<label class="col-sm-3 control-label">出货单主表id：</label>
+				<div class="col-sm-8">
+					<input id="outId" name="outId" th:field="*{outId}" class="form-control" type="text">
+				</div>
+			</div>
+			<div class="form-group">	
+				<label class="col-sm-3 control-label">订单id：</label>
+				<div class="col-sm-8">
+					<input id="orderId" name="orderId" th:field="*{orderId}" class="form-control" type="text">
+				</div>
+			</div>
+			<div class="form-group">	
+				<label class="col-sm-3 control-label">订单编号：</label>
+				<div class="col-sm-8">
+					<input id="orderCode" name="orderCode" th:field="*{orderCode}" class="form-control" type="text">
+				</div>
+			</div>
+			<div class="form-group">	
+				<label class="col-sm-3 control-label">出库数量(正数代表出库，负数代表退货数量)：</label>
+				<div class="col-sm-8">
+					<input id="outNumber" name="outNumber" th:field="*{outNumber}" class="form-control" type="text">
+				</div>
+			</div>
+			<div class="form-group">	
+				<label class="col-sm-3 control-label">产品单价：</label>
+				<div class="col-sm-8">
+					<input id="pnPrice" name="pnPrice" th:field="*{pnPrice}" class="form-control" type="text">
+				</div>
+			</div>
+			<div class="form-group">	
+				<label class="col-sm-3 control-label">产品编码：</label>
+				<div class="col-sm-8">
+					<input id="pnCode" name="pnCode" th:field="*{pnCode}" class="form-control" type="text">
+				</div>
+			</div>
+			<div class="form-group">	
+				<label class="col-sm-3 control-label">产品描述：</label>
+				<div class="col-sm-8">
+					<input id="pnRemark" name="pnRemark" th:field="*{pnRemark}" class="form-control" type="text">
+				</div>
+			</div>
+			<div class="form-group">	
+				<label class="col-sm-3 control-label">总金额：</label>
+				<div class="col-sm-8">
+					<input id="totalPrice" name="totalPrice" th:field="*{totalPrice}" class="form-control" type="text">
+				</div>
+			</div>
+			<div class="form-group">	
+				<label class="col-sm-3 control-label">明细描述信息：</label>
+				<div class="col-sm-8">
+					<input id="outRemark" name="outRemark" th:field="*{outRemark}" class="form-control" type="text">
+				</div>
+			</div>
+			<div class="form-group">	
+				<label class="col-sm-3 control-label">创建时间：</label>
+				<div class="col-sm-8">
+					<input id="outTime" name="outTime" th:field="*{outTime}" class="form-control" type="text">
+				</div>
+			</div>
+		</form>
+    </div>
+    <div th:include="include::footer"></div>
+    <script type="text/javascript">
+		var prefix = ctx + "factory/outOrderDetail";
+		$("#form-outOrderDetail-edit").validate({
+			rules:{
+				xxxx:{
+					required:true,
+				},
+			}
+		});
+		
+		function submitHandler() {
+	        if ($.validate.form()) {
+	            $.operate.save(prefix + "/edit", $('#form-outOrderDetail-edit').serialize());
+	        }
+	    }
+	</script>
+</body>
+</html>

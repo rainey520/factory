@@ -1,0 +1,330 @@
+<!DOCTYPE HTML>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<meta charset="utf-8">
+<head th:include="include :: header"></head>
+<body class="white-bg">
+<div class="wrapper wrapper-content animated fadeInRight ibox-content">
+    <div class="col-sm-12 select-table">
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="ibox float-e-margins">
+                    <div class="ibox-title">
+                        <h5>订单数据</h5>
+                    </div>
+                    <div class="ibox-content">
+                        <form role="form" id="form-order-add">
+                            <div class="form-group">
+                                <label class="col-sm-12 control-label" style="margin-top: 10px;">客户：</label>
+                                <div class="col-sm-12">
+                                    <select style="width: 100%" id="cusId" class="form-control" name="cusId"
+                                            onchange="customerChange(this)"
+                                            th:with="customer = ${@customer.selectCustomerListByComId(1)}">
+                                        <option value="-1">请选择</option>
+                                        <option th:each="item : ${customer}" th:data-id="${item.id}"
+                                                th:data-phone="${item.cusPhone}"
+                                                th:data-address="${item.cusAddress}" th:text="${item.cusName}"
+                                                th:value="${item.id}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-12 control-label" style="margin-top: 10px;">订单号：</label>
+                                <div class="col-sm-12">
+                                    <input id="orderCode" type="text" class="form-control" name="orderCode"/>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-12 control-label" style="margin-top: 10px;">交付日期：</label>
+                                <div class="col-sm-12">
+                                    <input id="deliverTime" name="deliverTime" class="form-control time-input">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-12 control-label" style="margin-top: 10px;">联系方式：</label>
+                                <div class="col-sm-12">
+                                    <input type="text" id="cusPhone" class="form-control"
+                                           name="cusPhone"/>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-12 control-label" style="margin-top: 10px;">收货地址：</label>
+                                <div class="col-sm-12">
+                                    <textarea id="cusAddress" rows="4" class="form-control" type="text"
+                                              name="cusAddress"></textarea>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-12 control-label" style="margin-top: 10px;">备注信息：</label>
+                                <div class="col-sm-12">
+                                    <textarea id="remark" class="form-control" rows="4" type="text"
+                                              name="remark"></textarea>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div style="width: 100%;text-align: center;">
+                                    <a class="btn btn-primary btn-rounded btn-sm" style="margin-top: 15px"
+                                       onclick="submitHandler()"><i class="fa fa-save"></i>&nbsp;生成订单</a>
+                                    <a class="btn btn-primary btn-rounded btn-sm" style="margin-top: 15px"
+                                       onclick="addProduct()"><i class="fa fa-plus"></i>&nbsp;添加详情数据</a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-8">
+                <div class="ibox float-e-margins">
+                    <div class="ibox-title">
+                        <h5>订单详情</h5>
+                    </div>
+                    <div class="ibox-content">
+                        <table class="table table-striped table-bordered table-hover " id="add-order-table">
+                            <thead>
+                            <tr>
+                                <th>客户编码</th>
+                                <th>编码描述</th>
+                                <th>价格[含税]</th>
+                                <th>单位</th>
+                                <th style="width: 180px">数量</th>
+                                <th>合计</th>
+                                <th>操作</th>
+                            </tr>
+                            </thead>
+                            <tbody id="add-order-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div th:include="include::footer"></div>
+<script th:inline="javascript">
+    var prefix = ctx + "factory/order"
+    $("#form-order-add").validate({
+        rules: {
+            orderCode: {
+                required: true,
+                remote: {
+                    url: prefix + "/checkOrderCode",
+                    type: "post",
+                    dataType: "json",
+                    data: {
+                        name : function() {
+                            return $.common.trim($("#orderCode").val());
+                        }
+                    },
+                    dataFilter: function(data, type) {
+                        return $.validate.unique(data);
+                    }
+                }
+            },
+        },
+        messages: {
+            "orderCode": {
+                remote: "订单号已存在重新输入"
+            },
+        }
+
+    });
+
+    /**
+     * 客户选择改变
+     * */
+    function customerChange(e) {
+        var item = $(e).val();
+        $("#add-order-table-body").find("tr").remove();
+        if (item != -1) {
+            $("#cusPhone").val($(e).find("option:selected").attr("data-phone"));
+            $("#cusAddress").val($(e).find("option:selected").attr("data-address"));
+        } else {
+            $("#cusPhone").val("");
+            $("#cusAddress").val("");
+        }
+    }
+
+    function submitHandler() {
+        if ($.validate.form()) {
+            // 客户信息
+            var cusId = $("#cusId").find("option:selected").val();
+            if (cusId == "" || cusId <= 0) {
+                $.modal.alertWarning("请选择客户");
+                return;
+            }
+            // 获取订单号
+            var orderCode = $("#orderCode").val();
+            if ($.common.isEmpty(orderCode)) {
+                $.modal.alertWarning("请输入订单号");
+                return;
+            }
+            var deliverTime = $("#deliverTime").val();
+            if (!deliverTime) {
+                $.modal.alertWarning("请选择交付日期")
+                return;
+            }
+            //封装订单主表信息
+            var remark = $("#remark").val();//备注信息
+            var data = {
+                cusId: cusId,
+                orderCode: orderCode,
+                deliverTime: deliverTime,
+                remark: remark
+            }
+            // 订单明细
+            //封装下单详情
+            var checkCodeNum = 0;
+            var checkNum = 0;
+            var checkCodeArray = new Array();
+            var detail = [];
+            $("#add-order-table-body").find("tr").each(function () {
+                var item = {};
+                var pnCode = $(this).find("td").find("option:selected").val();
+                if (pnCode && pnCode != -1) {
+                    item.cusId = cusId; // 客户id
+                    item.pnCode = pnCode; // 客户编码
+                    item.orderCode = orderCode; // 订单编号
+                    item.pnRemark = $(this).find("td").find("input[name='pnRemark']").val();//编码描述
+                    item.unitPrice = $(this).find("td").find("input[name='unitPrice']").val();//单价
+                    item.pnUnit = $(this).find("td").find("input[name='pnUnit']").val();//单位
+                    item.totalNum = $(this).find("td").find("input[name='number']").val();//总交互数量
+                    if (item.totalNum <= 0) {
+                        checkNum ++;
+                    }
+                    item.totalPrice = $(this).find("td").find("input[name='totalPrice']").val();//合计
+                    var index = $.inArray(item.pnCode, checkCodeArray);
+                    if (index >= 0) {
+                        checkCodeNum++;
+                    } else {
+                        checkCodeArray.push(item.pnCode);
+                    }
+                    detail.push(item);
+                }
+            });
+            if (detail.length <= 0) {
+                $.modal.alertWarning("请添加订单明细")
+                return;
+            }
+            if (checkCodeNum > 0) {
+                $.modal.alertWarning("明细存在相同的客户编码");
+                return;
+            }
+            if (checkNum > 0) {
+                $.modal.alertWarning("请检查数量是否填写正确")
+                return;
+            }
+            data.detailList = detail;
+            // 保存订单信息
+            var config = {
+                url: prefix + "/add",
+                type: "post",
+                dataType: "json",
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                beforeSend: function () {
+                    $.modal.loading("正在处理中，请稍后...");
+                    $.modal.disable();
+                },
+                success: function (result) {
+                    if (result.code == web_status.SUCCESS) {
+                        $.modal.confirm("下单成功", function () {
+                            $("#add-order-table-body").find("tr").remove();
+                        });
+                    } else {
+                        $.modal.alertError(result.msg);
+                    }
+                    $.modal.closeLoading();
+                }
+            };
+            $.ajax(config)
+        }
+    }
+
+    /**
+     * 添加产品
+     */
+    function addProduct() {
+        var cusId = $("#cusId").find("option:selected").val();
+        if (cusId == "" || cusId <= 0) {
+            $.modal.alertWarning("请选择客户");
+            return;
+        }
+        var item = [];
+        $.post(ctx + "factory/codeInfo/selectPnCodeListByCusId", {cusId: cusId}, function (res) {
+            if (res && res.code == web_status.SUCCESS) {
+                var data = res.data;
+                item.push("<option value='-1' >请选择</option>")
+                for (var i = 0; i < data.length; i++) {
+                    item.push("<option value='" + data[i].pnCode + "' data-product-id='" + data[i].id + "' " +
+                        "data-product-remark='" + data[i].pnRemark + "' data-product-unit='" + data[i].pnUnit + "' " +
+                        " data-product-price='" + data[i].pnPrice + "'>" + data[i].pnCode + "</option>")
+                };
+                var textDetail = '<tr>' +
+                    '<td><select name="pnCode" class="selectpicker show-tick form-control"  data-live-search="true" ' +
+                    'style="min-width: 180px;" onchange="productChange(this)" >' + item +
+                    '</select></td>' +
+                    '<td><input name="pnRemark" class="form-control" type="text" readonly="true"></td>' +
+                    '<td><input name="unitPrice" class="form-control" type="text" readonly="true"></td>' +
+                    '<td><input name="pnUnit" class="form-control" type="text" readonly="true"></td>' +
+                    '<td><input name="number" class="form-control" type="number" value="0" onchange="numberChange(this)"></td>' +
+                    '<td><input name="totalPrice"  readonly="true" value="0.00" class="form-control" type="number"></td>' +
+                    '<td><a  class="btn btn-danger btn-rounded btn-sm" onclick="removeRow(this)"><i></i>&nbsp;删除</a></td>' +
+                    '</tr>';
+                $("#add-order-table-body").append(textDetail);
+                $("#add-order-table-body select").select2({
+                    width: "180px",
+                });
+            } else {
+                $.modal.alertWarning("操作异常");
+            }
+        })
+    }
+
+    /**
+     * 产品选择改变
+     * @param val
+     */
+    function productChange(val) {
+        // 产品选择改变清空上次数据
+        $(val).parent("td").siblings("td").find("input[name='pnRemark']").val("");
+        $(val).parent("td").siblings("td").find("input[name='unitPrice']").val("");
+        $(val).parent("td").siblings("td").find("input[name='pnUnit']").val("");
+        $(val).parent("td").siblings("td").find("input[name='number']").val("0");
+        $(val).parent("td").siblings("td").find("input[name='totalPrice']").val("0.00");
+
+        if ($(val).val() != -1) {
+            $(val).parent("td").siblings("td").find("input[name='pnRemark']").val($(val).find("option:selected").attr("data-product-remark"));
+            $(val).parent("td").siblings("td").find("input[name='unitPrice']").val($(val).find("option:selected").attr("data-product-price"));
+            $(val).parent("td").siblings("td").find("input[name='pnUnit']").val($(val).find("option:selected").attr("data-product-unit"));
+        } else {
+            $(val).parent("td").siblings("td").find("input[name='pnRemark']").val("");
+            $(val).parent("td").siblings("td").find("input[name='unitPrice']").val("");
+            $(val).parent("td").siblings("td").find("input[name='pnUnit']").val("");
+            $(val).parent("td").siblings("td").find("input[name='number']").val("0");
+            $(val).parent("td").siblings("td").find("input[name='totalPrice']").val("0.00");
+        }
+    }
+
+    /**
+     * 数量改变
+     * @param val
+     */
+    function numberChange(val) {
+        var price = $(val).parent("td").siblings("td").find("input[name='unitPrice']").val();
+        if (price) {
+            $(val).parent("td").siblings("td").find("input[name='totalPrice']").val((parseFloat(price).toFixed(2) * parseInt($(val).val())).toFixed(2));
+        } else {
+            $(val).parent("td").siblings("td").find("input[name='totalPrice']").val("0.00");
+        }
+    }
+
+    /**
+     * 移除产品
+     * @param val
+     */
+    function removeRow(val) {
+        $(val).parent("td").parent("tr").remove();
+    }
+</script>
+</body>
+</html>
