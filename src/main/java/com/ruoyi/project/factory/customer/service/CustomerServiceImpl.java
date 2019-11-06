@@ -328,6 +328,7 @@ public class CustomerServiceImpl implements ICustomerService {
         int index = 7;
         // 查询检索条件出入库信息
         float totalPrice = 0.00F;
+        int totalNum = 0;
         List<OutOrderDetail> detailList = outOrderDetailMapper.selectRecordExcelList(user.getCompanyId(), cusId, sTime, eTime);
         if (StringUtils.isNotEmpty(detailList)) {
             Row rowDetail = null;
@@ -360,6 +361,7 @@ public class CustomerServiceImpl implements ICustomerService {
                 cellDetail.setCellStyle(cellStyleDetail);
                 cellDetail = rowDetail.createCell(5);
                 cellDetail.setCellValue(detail.getOutNumber());
+                totalNum += detail.getOutNumber();
                 cellDetail.setCellStyle(cellStyleDetail);
                 cellDetail = rowDetail.createCell(6);
                 pnPrice = getFloat3(detail.getPnPrice());
@@ -387,6 +389,12 @@ public class CustomerServiceImpl implements ICustomerService {
         // 合计金额
         Row sunPrice = sheet.createRow(index);
         cellStyle.setFont(font12b);
+        cellDetailHead = sunPrice.createCell(4);
+        cellDetailHead.setCellValue("总计数量：");
+        cellDetailHead.setCellStyle(cellStyle);
+        cellDetailHead = sunPrice.createCell(5);
+        cellDetailHead.setCellValue(getFloat3(totalNum));
+        cellDetailHead.setCellStyle(cellStyle);
         cellDetailHead = sunPrice.createCell(6);
         cellDetailHead.setCellValue("合计金额：");
         cellDetailHead.setCellStyle(cellStyle);

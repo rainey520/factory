@@ -75,4 +75,11 @@ public interface CodeInfoMapper
 	 * @return 结果
 	 */
 	CodeInfo selectCodeInfoByPnCode(@Param("pnCode") String pnCode);
+
+	/**
+	 * 检索条件查询所有的规格名称
+	 * @param companyId 公司id
+	 * @return 结果
+	 */
+	List<CodeInfo> selectPnNameList(@Param("companyId") Integer companyId);
 }

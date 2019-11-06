@@ -1,5 +1,6 @@
 package com.ruoyi.project.factory.order.controller;
 
+import com.ruoyi.common.constant.FileConstants;
 import com.ruoyi.common.exception.BusinessException;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.framework.aspectj.lang.annotation.Log;
@@ -28,7 +29,7 @@ import java.util.List;
 @Controller
 @RequestMapping("/factory/order")
 public class OrderController extends BaseController {
-    private String prefix = "factory/order";
+    private String prefix = "factory/order" ;
 
     @Autowired
     private IOrderService orderService;
@@ -39,7 +40,7 @@ public class OrderController extends BaseController {
     @RequiresPermissions("factory:order:list")
     @GetMapping()
     public String order() {
-        return prefix + "/order";
+        return prefix + "/order" ;
     }
 
     /**
@@ -72,7 +73,7 @@ public class OrderController extends BaseController {
      */
     @GetMapping("/add")
     public String add() {
-        return prefix + "/add";
+        return prefix + "/add" ;
     }
 
     /**
@@ -97,17 +98,17 @@ public class OrderController extends BaseController {
     public String detail(Integer id, ModelMap map) {
         List<OrderDetail> detailList = orderDetailService.selectOrderByOrderId(id);
         map.put("detailList", detailList);
-        return prefix + "/detail";
+        return prefix + "/detail" ;
     }
 
     /**
-     * 修改订单主
+     * 修改订单
      */
-    @GetMapping("/edit/{id}")
-    public String edit(@PathVariable("id") Integer id, ModelMap mmap) {
+    @GetMapping("/edit")
+    public String edit(Integer id, ModelMap mmap) {
         Order order = orderService.selectOrderById(id);
         mmap.put("order", order);
-        return prefix + "/edit";
+        return prefix + "/edit" ;
     }
 
     /**
@@ -117,7 +118,7 @@ public class OrderController extends BaseController {
     @Log(title = "订单主", businessType = BusinessType.UPDATE)
     @PostMapping("/edit")
     @ResponseBody
-    public AjaxResult editSave(Order order) {
+    public AjaxResult editSave(@RequestBody Order order) {
         return toAjax(orderService.updateOrder(order));
     }
 
@@ -129,7 +130,11 @@ public class OrderController extends BaseController {
     @PostMapping("/remove")
     @ResponseBody
     public AjaxResult remove(String ids) {
-        return toAjax(orderService.deleteOrderByIds(ids));
+        try {
+            return toAjax(orderService.deleteOrderByIds(ids));
+        } catch (BusinessException e) {
+            return error(e.getMessage());
+        }
     }
 
     /**
@@ -137,7 +142,7 @@ public class OrderController extends BaseController {
      */
     @PostMapping("/selectOrderListByCusId")
     @ResponseBody
-    public AjaxResult selectOrderListByCusId(Integer cusId){
+    public AjaxResult selectOrderListByCusId(Integer cusId) {
         return AjaxResult.success(orderService.selectOrderListByCusId(cusId));
     }
 
@@ -146,19 +151,31 @@ public class OrderController extends BaseController {
      */
     @PostMapping("/checkOrderCode")
     @ResponseBody
-    public String checkOrderCode(Order order){
+    public String checkOrderCode(Order order) {
         return orderService.checkOrderCode(order);
     }
+
     /**
      * 关闭订单
      */
     @PostMapping("/closeOrder")
     @ResponseBody
-    public AjaxResult closeOrder(Order order){
+    public AjaxResult closeOrder(Order order) {
         try {
             return toAjax(orderService.closeOrder(order));
         } catch (BusinessException e) {
             return error(e.getMessage());
         }
+    }
+
+    /**
+     * 查看订单文件信息
+     */
+    @GetMapping("/showFileInfo")
+    public String showFileInfo(Integer id, ModelMap map) {
+        map.put("saveId", id);
+        // 订单文件
+        map.put("saveType", FileConstants.SAVE_TYPE_IS_ORDER);
+        return prefix + "/fileInfo" ;
     }
 }

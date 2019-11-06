@@ -1,15 +1,20 @@
 package com.ruoyi.project.factory.order.service;
 
+import com.ruoyi.common.constant.FileConstants;
 import com.ruoyi.common.constant.OrderConstants;
 import com.ruoyi.common.constant.UserConstants;
 import com.ruoyi.common.exception.BusinessException;
 import com.ruoyi.common.support.Convert;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.framework.jwt.JwtUtil;
+import com.ruoyi.project.factory.customer.domain.Customer;
+import com.ruoyi.project.factory.customer.mapper.CustomerMapper;
 import com.ruoyi.project.factory.order.domain.Order;
 import com.ruoyi.project.factory.order.mapper.OrderMapper;
 import com.ruoyi.project.factory.orderDetail.domain.OrderDetail;
 import com.ruoyi.project.factory.orderDetail.mapper.OrderDetailMapper;
+import com.ruoyi.project.iso.filesource.domain.FileSourceInfo;
+import com.ruoyi.project.iso.filesource.mapper.FileSourceInfoMapper;
 import com.ruoyi.project.system.user.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,6 +38,12 @@ public class OrderServiceImpl implements IOrderService {
     @Autowired
     private OrderDetailMapper orderDetailMapper;
 
+    @Autowired
+    private CustomerMapper customerMapper;
+
+    @Autowired
+    private FileSourceInfoMapper fileSourceInfoMapper;
+
     /**
      * 查询订单主信息
      *
@@ -41,7 +52,16 @@ public class OrderServiceImpl implements IOrderService {
      */
     @Override
     public Order selectOrderById(Integer id) {
-        return orderMapper.selectOrderById(id);
+        Order order = orderMapper.selectOrderById(id);
+        if (order != null) {
+            // 查询客户信息
+            Customer customer = customerMapper.selectCustomerById(order.getCusId());
+            order.setCusPhone(customer.getCusPhone());
+            order.setCusAddress(customer.getCusAddress());
+            // 设置订单明细
+            order.setDetailList(orderDetailMapper.selectOrderByOrderId(order.getId()));
+        }
+        return order;
     }
 
     /**
@@ -69,6 +89,36 @@ public class OrderServiceImpl implements IOrderService {
             throw new BusinessException(UserConstants.NOT_LOGIN);
         }
         // 查询订单号是否重复
+        return insertOrder(order, user);
+    }
+
+    /**
+     * 修改订单主
+     *
+     * @param order 订单主信息
+     * @return 结果
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int updateOrder(Order order) {
+        User user = JwtUtil.getUser();
+        if (user == null) {
+            throw new BusinessException(UserConstants.NOT_LOGIN);
+        }
+        // 删除之前订单信息
+        orderMapper.deleteOrderById(order.getId());
+        orderDetailMapper.deleteOrderDetailByOrderId(order.getId());
+        // 新增
+        return insertOrder(order, user);
+    }
+
+    /**
+     * 新增订单信息
+     * @param order 订单信息
+     * @param user 用户信息
+     * @return 结果
+     */
+    private int insertOrder(Order order, User user) {
         if (order != null && StringUtils.isNotEmpty(order.getOrderCode())) {
             Order uniOrder = orderMapper.selectOrderByOrderCode(user.getCompanyId(), order.getOrderCode());
             if (uniOrder != null) {
@@ -81,7 +131,7 @@ public class OrderServiceImpl implements IOrderService {
         // 添加主表
         orderMapper.insertOrder(order);
         //订单总数量
-        int totalNum =0;
+        int totalNum = 0;
         //订单总金额
         float totalPrice = 0F;
         if (StringUtils.isNotEmpty(order.getDetailList())) {
@@ -100,17 +150,6 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     /**
-     * 修改订单主
-     *
-     * @param order 订单主信息
-     * @return 结果
-     */
-    @Override
-    public int updateOrder(Order order) {
-        return orderMapper.updateOrder(order);
-    }
-
-    /**
      * 删除订单主对象
      *
      * @param ids 需要删除的数据ID
@@ -119,6 +158,18 @@ public class OrderServiceImpl implements IOrderService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int deleteOrderByIds(String ids) {
+        // 查询文件信息
+        Integer[] saveIds = Convert.toIntArray(ids);
+        List<FileSourceInfo> sourceInfos = null;
+        Order order = null;
+        // 删除对应文件信息
+        for (Integer saveId : saveIds) {
+            order = orderMapper.selectOrderById(saveId);
+            sourceInfos = fileSourceInfoMapper.selectFileInfoBySaveId(saveId, FileConstants.SAVE_TYPE_IS_ORDER);
+            if (StringUtils.isNotEmpty(sourceInfos)) {
+                throw new BusinessException(order.getOrderCode() + "存在文件，请先删除文件");
+            }
+        }
         orderDetailMapper.deleteOrderDetailByOrderIds(Convert.toStrArray(ids));
         return orderMapper.deleteOrderByIds(Convert.toStrArray(ids));
     }

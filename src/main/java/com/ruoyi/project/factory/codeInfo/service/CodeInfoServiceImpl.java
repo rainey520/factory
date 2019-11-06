@@ -1,5 +1,6 @@
 package com.ruoyi.project.factory.codeInfo.service;
 
+import com.ruoyi.common.constant.FileConstants;
 import com.ruoyi.common.constant.OrderConstants;
 import com.ruoyi.common.exception.BusinessException;
 import com.ruoyi.common.support.Convert;
@@ -101,7 +102,7 @@ public class CodeInfoServiceImpl implements ICodeInfoService {
         // 删除对应文件信息
         for (Integer saveId : saveIds) {
             codeInfo = codeInfoMapper.selectCodeInfoById(saveId);
-            sourceInfos = fileSourceInfoMapper.selectFileInfoBySaveId(saveId,1);
+            sourceInfos = fileSourceInfoMapper.selectFileInfoBySaveId(saveId, FileConstants.SAVE_TYPE_IS_PRODUCT);
             if (StringUtils.isNotEmpty(sourceInfos)) {
                 throw new BusinessException(codeInfo.getPnCode() + "存在文件，请先删除文件");
             }
@@ -148,5 +149,18 @@ public class CodeInfoServiceImpl implements ICodeInfoService {
             return Collections.emptyList();
         }
         return codeInfoMapper.selectPnCodeListByCusId(user.getCompanyId(),null);
+    }
+
+    /**
+     * 检索条件查询所有的规格名称
+     * @return 结果
+     */
+    @Override
+    public List<CodeInfo> selectPnNameList() {
+        User user = JwtUtil.getUser();
+        if (user == null) {
+            return Collections.emptyList();
+        }
+        return codeInfoMapper.selectPnNameList(user.getCompanyId());
     }
 }

@@ -17,6 +17,13 @@
 									<option th:each="item:${pnList}" th:text="${item.pnCode}" th:value="${item.pnCode}"></option>
 								</select>
 							</li>
+							<li>
+								规格名称：
+								<select id="pnRemark" name="pnRemark" th:with="pnNameList=${@codeInfo.selectPnNameList()}">
+									<option value="">请选择</option>
+									<option th:each="item:${pnNameList}" th:text="${item.pnRemark}" th:value="${item.pnRemark}"></option>
+								</select>
+							</li>
 
 							<li>
 								<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
@@ -53,12 +60,16 @@
 			$("#pnCode").select2({
 				width:"200px",
 			});
+			$("#pnRemark").select2({
+				width:"350px",
+			});
 		});
 
 		// 重置搜索表单信息
 		function formReset() {
 			$('#formId')[0].reset();//input标签重置
 			$("#pnCode").val(null).trigger("change"); // select2标签重置
+			$("#pnRemark").val(null).trigger("change"); // select2标签重置
 		}
         $(function() {
             var options = {

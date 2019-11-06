@@ -260,7 +260,14 @@ public class OutOrderServiceImpl implements IOutOrderService {
         float totalPrice = 0.0F;
         // 查询明细
         List<OutOrderDetail> outOrderDetailList = outOrderDetailMapper.selectOutOrderDetailByOutId(outOrder.getId());
+        String pnRemark = null;
         for (OutOrderDetail outOrderDetail : outOrderDetailList) {
+            pnRemark = outOrderDetail.getPnRemark();
+            if (StringUtils.isNotEmpty(pnRemark) && pnRemark.length() >= 19) {
+                outOrderDetail.setPnRemark(pnRemark.substring(0,19)+"..");
+            } else {
+                outOrderDetail.setPnRemark(pnRemark);
+            }
             totalPrice += outOrderDetail.getTotalPrice();
         }
         outItem.setTotalPrice(totalPrice);

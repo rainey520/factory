@@ -39,7 +39,7 @@ public class Order extends BaseEntity
 	@JsonFormat(pattern = "yyyy-MM-dd")
 	private Date deliverTime;
 	/** 订单创建日期 */
-	@JsonFormat(pattern = "yyyy-MM-dd")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm")
 	private Date createTime;
 	/** 订单备注 */
 	private String remark;
@@ -48,12 +48,44 @@ public class Order extends BaseEntity
 	/** 客户编码 */
 	private String pnCode;
 
+	/********************** 客户信息 *******************************/
+	/** 客户联系方式 */
+	private String cusPhone;
+	/** 客户联系人 */
+	private String cusPerson;
+	/** 客户地址 */
+	private String cusAddress;
+
 	public String getPnCode() {
 		return pnCode;
 	}
 
 	public void setPnCode(String pnCode) {
 		this.pnCode = pnCode;
+	}
+
+	public String getCusPhone() {
+		return cusPhone;
+	}
+
+	public void setCusPhone(String cusPhone) {
+		this.cusPhone = cusPhone;
+	}
+
+	public String getCusPerson() {
+		return cusPerson;
+	}
+
+	public void setCusPerson(String cusPerson) {
+		this.cusPerson = cusPerson;
+	}
+
+	public String getCusAddress() {
+		return cusAddress;
+	}
+
+	public void setCusAddress(String cusAddress) {
+		this.cusAddress = cusAddress;
 	}
 
 	public Integer getDeliveredNum() {

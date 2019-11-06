@@ -1,5 +1,6 @@
 package com.ruoyi.project.factory.codeInfo.controller;
 
+import com.ruoyi.common.constant.FileConstants;
 import com.ruoyi.common.exception.BusinessException;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.framework.aspectj.lang.annotation.Log;
@@ -153,7 +154,7 @@ public class CodeInfoController extends BaseController {
     @GetMapping("/showFileInfo")
     public String showFileInfo(Integer id,ModelMap map){
         map.put("saveId",id);
-        map.put("saveType",1);
+        map.put("saveType", FileConstants.SAVE_TYPE_IS_PRODUCT);
         return prefix + "/fileInfo";
     }
 }

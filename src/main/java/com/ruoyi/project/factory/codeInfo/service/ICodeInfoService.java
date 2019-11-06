@@ -70,4 +70,10 @@ public interface ICodeInfoService
 	 * @return 结果
 	 */
 	List<CodeInfo> selectPnCodeList();
+
+	/**
+	 * 检索条件查询所有的规格名称
+	 * @return 结果
+	 */
+	List<CodeInfo> selectPnNameList();
 }

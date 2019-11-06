@@ -107,4 +107,11 @@ public interface OrderDetailMapper {
      * @return 结果
      */
     int deleteOrderDetailByOrderIds(String[] ids);
+
+    /**
+     * 通过订单id删除订单信息
+     * @param orderId 订单id
+     * @return 结果
+     */
+    int deleteOrderDetailByOrderId(@Param("orderId") Integer orderId);
 }

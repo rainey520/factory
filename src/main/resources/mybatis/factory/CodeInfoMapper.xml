@@ -30,7 +30,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
              <if test="pnCode != null  and pnCode != '' "> and pn_code like concat('%',#{pnCode},'%')</if>
              <if test="pnName != null  and pnName != '' "> and pn_name = #{pnName}</if>
              <if test="cusId != null "> and cus_id = #{cusId}</if>
-             <if test="pnRemark != null  and pnRemark != '' "> and pn_remark = #{pnRemark}</if>
+             <if test="pnRemark != null  and pnRemark != '' "> and pn_remark like concat('%', #{pnRemark},'%')</if>
              <if test="pnPrice != null "> and pn_price = #{pnPrice}</if>
              <if test="pnTime != null "> and pn_time = #{pnTime}</if>
              <if test="companyId != null "> and company_id = #{companyId}</if>
@@ -111,6 +111,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectCodeInfoByPnCode" resultMap="CodeInfoResult">
         <include refid="selectCodeInfoVo"/>
         where pn_code = #{pnCode} limit 1;
+    </select>
+
+    <!--检索产品规格列表-->
+    <select id="selectPnNameList" resultMap="CodeInfoResult">
+        SELECT pn_remark FROM fac_code_info where company_id = #{companyId}
+        group by pn_remark
     </select>
     
 </mapper>

@@ -29,9 +29,9 @@
                             <tr>
                                 <th>订单号</th>
                                 <th>所属客户</th>
-                                <th>订单总数</th>
+                                <th>订单总数/已交数</th>
+                                <th>未交数量</th>
                                 <th>订单总金额</th>
-                                <th>已交付数</th>
                                 <th>订单交付日期</th>
                             </tr>
                             </thead>
@@ -40,9 +40,9 @@
                             <tr th:each="item : ${orderList}">
                                 <td th:text="${item.orderCode}"></td>
                                 <td th:text="${item.cusName}"></td>
-                                <td th:text="${item.totalNumber}"></td>
+                                <td><span style="color: #002a80;font-weight: bold" th:utext="${item.totalNumber}"></span><span style="font-weight: bold">/</span><span style="color: red;font-weight: bold" th:utext="${item.deliveredNum}"></span></td>
+                                <td style="color: darkgreen;font-weight: bold" th:text="${item.totalNumber - item.deliveredNum}"></td>
                                 <td th:text="${item.totalPrice}"></td>
-                                <td th:text="${item.deliveredNum}"></td>
                                 <td th:utext="${#dates.format(item.deliverTime,'yyyy-MM-dd')}"></td>
                             </tr>
                             </tbody>
