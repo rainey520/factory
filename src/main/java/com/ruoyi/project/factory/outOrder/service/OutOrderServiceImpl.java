@@ -191,15 +191,14 @@ public class OutOrderServiceImpl implements IOutOrderService {
         outOrderInfo.setStatus(OrderConstants.OUT_ORDER_CONFIRMED);
         // 确认日期
         outOrderInfo.setOutTime(new Date());
-        outOrderMapper.updateOutOrder(outOrderInfo);
 
-        // 针对客户出库操作
-        Order order = null;
-        OrderDetail orderDetail = null;
-        // 查询出库单明细
-        List<OutOrderDetail> outOrderDetailList = outOrderDetailMapper.selectOutOrderDetailByOutId(outOrderInfo.getId());
-        // 针对客户订单操作，出库退货
+        // 出入库属于客户类型才进行订单相关操作
         if (OrderConstants.OUT_TYPE_CUS_OUT.equals(outOrderInfo.getOutType()) || OrderConstants.OUT_TYPE_CUS_BACK.equals(outOrderInfo.getOutType())) {
+            // 针对客户出库操作
+            Order order = null;
+            OrderDetail orderDetail = null;
+            // 查询出库单明细
+            List<OutOrderDetail> outOrderDetailList = outOrderDetailMapper.selectOutOrderDetailByOutId(outOrderInfo.getId());
             /**
              * 操作相关订单列表
              */
@@ -221,7 +220,7 @@ public class OutOrderServiceImpl implements IOutOrderService {
                 }
             }
         }
-        return 1;
+        return outOrderMapper.updateOutOrder(outOrderInfo);
     }
 
 
