@@ -33,7 +33,7 @@
                     <div style="margin-bottom: 6px;">
                         <span th:utext="${outItem != null and outItem.outMsg != null ? outItem.outMsg  :''}"></span>：
                         <span th:utext="${outItem != null and outItem.outCode != null ? outItem.outCode:''}"></span>
-                        <span style="font-size: 14px;float: right;" th:utext="'时间：'+${#dates.format(outItem.outDate,'yyyy-MM-dd')}"></span>
+                        <span style="font-size: 14px;float: right;" th:utext="'时间：'+${#dates.format(outItem.outDate,'yyyy-MM-dd HH:mm')}"></span>
                     </div>
                     <div style="float: left;width: 50%;">
                         <ul>

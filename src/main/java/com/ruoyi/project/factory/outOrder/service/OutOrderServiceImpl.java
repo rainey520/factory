@@ -189,6 +189,8 @@ public class OutOrderServiceImpl implements IOutOrderService {
         }
         // 设置为已经确认
         outOrderInfo.setStatus(OrderConstants.OUT_ORDER_CONFIRMED);
+        // 确认日期
+        outOrderInfo.setOutTime(new Date());
         outOrderMapper.updateOutOrder(outOrderInfo);
 
         // 针对客户出库操作
@@ -238,6 +240,7 @@ public class OutOrderServiceImpl implements IOutOrderService {
         if (outOrder == null) {
             return outItem;
         }
+        outItem.setOutDate(outOrder.getOutTime());
         outItem.setSign(outOrder.getStatus());
         outItem.setOutCode(outOrder.getOutCode());
         if (OrderConstants.OUT_TYPE_CUS_OUT.equals(outOrder.getOutType())) {

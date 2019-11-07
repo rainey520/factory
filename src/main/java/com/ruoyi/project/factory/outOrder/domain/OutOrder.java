@@ -30,7 +30,7 @@ public class OutOrder extends BaseEntity
 	/** 类型(0、客户出货单，1、客户退货单，2、外加工出库单，3、外加工入库单) */
 	private Integer outType;
 	/** 出货日期 */
-	@JsonFormat(pattern = "yyyy-MM-dd")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm")
 	private Date outTime;
 	/** 总数量 */
 	private Integer outNum;
