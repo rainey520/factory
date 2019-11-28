@@ -5,10 +5,12 @@ import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.framework.jwt.JwtUtil;
 import com.ruoyi.project.factory.orderDetail.domain.OrderDetail;
 import com.ruoyi.project.factory.orderDetail.mapper.OrderDetailMapper;
+import com.ruoyi.project.factory.outOrderDetail.mapper.OutOrderDetailMapper;
 import com.ruoyi.project.system.user.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -20,8 +22,11 @@ import java.util.List;
  */
 @Service
 public class OrderDetailServiceImpl implements IOrderDetailService {
+
     @Autowired
     private OrderDetailMapper orderDetailMapper;
+    @Autowired
+    private OutOrderDetailMapper outOrderDetailMapper;
 
     /**
      * 查询订单明细信息
@@ -86,7 +91,13 @@ public class OrderDetailServiceImpl implements IOrderDetailService {
      */
     @Override
     public List<OrderDetail> selectOrderByOrderId(Integer orderId) {
-        return orderDetailMapper.selectOrderByOrderId(orderId);
+        List<OrderDetail> orderDetails = orderDetailMapper.selectOrderByOrderId(orderId);
+        Integer deliveredNum;
+        for (OrderDetail orderDetail : orderDetails) {
+            deliveredNum = outOrderDetailMapper.selectOutOrderDetailByCode(orderDetail.getCompanyId(), orderDetail.getOrderCode(), orderDetail.getCusId(), orderDetail.getPnCode());
+            orderDetail.setDeliveredNum(deliveredNum == null ? 0 : deliveredNum);
+        }
+        return orderDetails;
     }
 
     /**
@@ -102,11 +113,25 @@ public class OrderDetailServiceImpl implements IOrderDetailService {
         if (user == null) {
             return Collections.emptyList();
         }
-        return orderDetailMapper.selectOrderDetailsByPnCode(user.getCompanyId(), cusId, pnCode);
+        List<OrderDetail> chooseOrder = new ArrayList<>();
+        List<OrderDetail> orderDetails = orderDetailMapper.selectOrderDetailsByPnCode(user.getCompanyId(), cusId, pnCode);
+        if (StringUtils.isNotEmpty(orderDetails)) {
+            Integer deliveredNum = null;
+            for (OrderDetail orderDetail : orderDetails) {
+                // 查询出入库信息
+                deliveredNum = outOrderDetailMapper.selectOutOrderDetailByCode(orderDetail.getCompanyId(), orderDetail.getOrderCode(), cusId, pnCode);
+                orderDetail.setDeliveredNum(deliveredNum == null ? 0 : deliveredNum);
+                if (orderDetail.getTotalNum() > orderDetail.getDeliveredNum()) {
+                    chooseOrder.add(orderDetail);
+                }
+            }
+        }
+        return chooseOrder;
     }
 
     /**
      * 客户退货选择订单
+     *
      * @param cusId  客户id
      * @param pnCode 产品编码
      * @return 结果
@@ -117,13 +142,25 @@ public class OrderDetailServiceImpl implements IOrderDetailService {
         if (user == null) {
             return Collections.emptyList();
         }
-        List<OrderDetail> details = null;
+        List<OrderDetail> details;
+        List<OrderDetail> outDetails = new ArrayList<>();
         // 查询未交付完成的订单信息
-        details = orderDetailMapper.selectOrderDetailByDelNum(user.getCompanyId(),cusId,pnCode);
+        details = orderDetailMapper.selectOrderDetailByDelNum(user.getCompanyId(), cusId, pnCode);
         if (StringUtils.isEmpty(details)) {
             // 查询已经交付完的订单信息
-            details = orderDetailMapper.selectOrderDetailByUnDelNum(user.getCompanyId(),cusId,pnCode);
+            details = orderDetailMapper.selectOrderDetailByUnDelNum(user.getCompanyId(), cusId, pnCode);
         }
-        return details;
+        if (StringUtils.isNotEmpty(details)) {
+            Integer deliveredNum = null;
+            for (OrderDetail detail : details) {
+                // 查询出入库信息
+                deliveredNum = outOrderDetailMapper.selectOutOrderDetailByCode(detail.getCompanyId(), detail.getOrderCode(), cusId, pnCode);
+                detail.setDeliveredNum(deliveredNum == null ? 0 : deliveredNum);
+                if (detail.getDeliveredNum() > 0) {
+                    outDetails.add(detail);
+                }
+            }
+        }
+        return outDetails;
     }
 }

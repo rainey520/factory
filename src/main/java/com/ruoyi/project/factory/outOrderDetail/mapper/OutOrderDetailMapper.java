@@ -53,6 +53,13 @@ public interface OutOrderDetailMapper {
     public int deleteOutOrderDetailById(Integer id);
 
     /**
+     * 通过出入库id删除明细信息
+     * @param outId 出入库id
+     * @return 结果
+     */
+    public int deleteOutOrderDetailByOutId(@Param("outId") Integer outId);
+
+    /**
      * 批量删除出库单明细
      *
      * @param ids 需要删除的数据ID
@@ -86,4 +93,23 @@ public interface OutOrderDetailMapper {
      * @return 结果
      */
     int deleteOutOrderDetailByOutIds(String[] ids);
+
+    /**
+     * 查询已交付数量
+     * @param companyId 公司id
+     * @param orderCode 订单号
+     * @param cusId 客户id
+     * @param pnCode 产品编码
+     * @return 结果
+     */
+    Integer selectOutOrderDetailByCode(@Param("companyId") Integer companyId,@Param("orderCode") String orderCode,
+                                   @Param("cusId") Integer cusId, @Param("pnCode") String pnCode);
+
+    /**
+     * 通过订单号查询所有的出入库明细
+     * @param companyId 公司id
+     * @param orderCode 订单号
+     * @return 结果
+     */
+    List<OutOrderDetail> selectOutOrderDetailListByOrderCode(@Param("companyId") Integer companyId, @Param("orderCode") String orderCode);
 }

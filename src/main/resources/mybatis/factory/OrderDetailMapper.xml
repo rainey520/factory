@@ -129,22 +129,22 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where order_id = #{orderId}
     </select>
 
-    <!--客户出库选择未关闭的订单-->
+    <!--客户出库选择订单-->
     <select id="selectOrderDetailsByPnCode" resultMap="OrderDetailResult">
        SELECT b.* FROM fac_order as a,fac_order_detail as b where a.id = b.order_id
-        and b.cus_id = #{cusId} and b.company_id = #{companyId} and b.pn_code = #{pnCode} and a.status != 2
+        and b.cus_id = #{cusId} and b.company_id = #{companyId} and b.pn_code = #{pnCode}
     </select>
 
     <!--查询未交付完的订单信息-->
     <select id="selectOrderDetailByDelNum" resultMap="OrderDetailResult">
-        <include refid="selectOrderDetailVo"/>
-        where cus_id = #{cusId} and company_id = #{companyId} and pn_code = #{pnCode} and delivered_num > 0
+        SELECT a.* FROM fac_order_detail a left join fac_order b on a.order_id = b.id
+        where a.cus_id = #{cusId} and a.company_id = #{companyId} and a.pn_code = #{pnCode} and b.status != 2
     </select>
 
-    <!--查询已经交付完的订单信息-->
+    <!--查询已经关闭的订单信息-->
     <select id="selectOrderDetailByUnDelNum" resultMap="OrderDetailResult">
-        <include refid="selectOrderDetailVo"/>
-        where cus_id = #{cusId} and company_id = #{companyId} and pn_code = #{pnCode} and undelivered_num = 0
+        SELECT a.* FROM fac_order_detail a left join fac_order b on a.order_id = b.id
+        where a.cus_id = #{cusId} and a.company_id = #{companyId} and a.pn_code = #{pnCode} and b.status = 2
     </select>
 
     <!--通过订单id删除-->

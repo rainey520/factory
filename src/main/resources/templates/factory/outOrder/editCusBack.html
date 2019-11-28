@@ -4,8 +4,10 @@
 <head th:include="include :: header"></head>
 <body class="white-bg">
 <div class="wrapper wrapper-content animated fadeInRight ibox-content">
-	<div class="col-sm-12 select-table">
-		<input type="hidden" id="outType" name="outType" th:value="${outType}">
+	<div class="col-sm-12 select-table" th:if="${outOrder != null}">
+		<input type="hidden" id="outType" name="outType" th:value="${outOrder.outType}">
+		<input type="hidden" id="id" name="id" th:value="${outOrder.id}">
+		<input type="hidden" id="outCode" name="outCode" th:value="${outOrder.outCode}">
 		<div class="row">
 			<div class="col-sm-3">
 				<div class="ibox float-e-margins">
@@ -23,6 +25,7 @@
 										<option value="-1">请选择</option>
 										<option th:each="item : ${customer}" th:data-id="${item.id}"
 												th:data-phone="${item.cusPhone}"
+												th:selected="${item.id == outOrder.cusId}"
 												th:data-address="${item.cusAddress}" th:text="${item.cusName}"
 												th:value="${item.id}"></option>
 									</select>
@@ -32,19 +35,22 @@
 								<label class="col-sm-12 control-label" style="margin-top: 10px;">联系方式：</label>
 								<div class="col-sm-12">
 									<input type="text" id="cusPhone" class="form-control"
+										   th:value="${outOrder.cusPhone != null? outOrder.cusPhone:''}"
 										   name="cusPhone"/>
 								</div>
 							</div>
 							<div class="form-group">
 								<label class="col-sm-12 control-label" style="margin-top: 10px;">实际交付日期：</label>
 								<div class="col-sm-12">
-									<input id="outTime" name="outTime" class="form-control time-input">
+									<input id="outTime" name="outTime" class="form-control time-input"
+										   th:value="${#dates.format(outOrder.outTime,'yyyy-MM-dd')}">
 								</div>
 							</div>
 							<div class="form-group">
 								<label class="col-sm-12 control-label" style="margin-top: 10px;">收货地址：</label>
 								<div class="col-sm-12">
                                     <textarea id="cusAddress" rows="4" class="form-control" type="text"
+											  th:text="${outOrder.cusAddress != null? outOrder.cusAddress:''}"
 											  name="cusAddress"></textarea>
 								</div>
 							</div>
@@ -52,6 +58,7 @@
 								<label class="col-sm-12 control-label" style="margin-top: 10px;">备注信息：</label>
 								<div class="col-sm-12">
                                     <textarea id="remark" class="form-control" rows="4" type="text"
+											  th:text="${outOrder.remark}"
 											  name="remark"></textarea>
 								</div>
 							</div>
@@ -87,12 +94,36 @@
 							</tr>
 							</thead>
 							<tbody id="add-order-table-body">
+							<tr th:if="${not #lists.isEmpty(outOrder.detailList)}" th:each="item:${outOrder.detailList}">
+								<td>
+									<input type="hidden" name="pnRemark" th:value="${item.pnRemark}">
+									<input type="hidden" name="pnUnit" th:value="${item.pnUnit}">
+									<input type="hidden" name="orderId" th:value="${item.orderId}">
+									<select name="pnCode" class="selectpicker show-tick form-control">
+										<option th:value="${item.pnCode}" th:text="${item.pnCode}"></option>
+									</select>
+								</td>
+								<td><input name="pnPrice" th:value="${item.pnPrice}" class="form-control" type="text" readonly="true"></td>
+								<td>
+									<select name="orderCode" class="selectpicker show-tick form-control">
+										<option th:value="${item.orderCode}" th:text="${item.orderCode}"></option>
+									</select>
+								</td>
+								<td><input name="totalNum" class="form-control" th:value="${item.totalNum}" type="text" readonly="true"></td>
+								<td><input name="undeliveredNum" class="form-control" th:value="${item.deliveredNum}" type="text" readonly="true"></td>
+								<td><input name="outNumber" class="form-control" type="number" th:value="${item.outNumber}" onchange="numberChange(this)"></td>
+								<td><input name="totalPrice"  readonly="true" th:value="${item.totalPrice}" class="form-control" type="number"></td>
+								<td><a  class="btn btn-danger btn-rounded btn-sm" onclick="removeRow(this)"><i></i>&nbsp;删除</a></td>
+							</tr>
 							</tbody>
 						</table>
 					</div>
 				</div>
 			</div>
 		</div>
+	</div>
+	<div th:if="${outOrder == null}">
+		<h1>没有相关明细信息</h1>
 	</div>
 </div>
 <div th:include="include::footer"></div>
@@ -139,7 +170,9 @@
 			outType: $("#outType").val(),
 			cusId: cusId,
 			remark: remark,
-			outTime:outTime
+			outTime:outTime,
+			id:$("#id").val(),
+			outCode:$("#outCode").val()
 		}
 		//封装下单详情
 		var detail = [];
@@ -156,9 +189,9 @@
 				item.cusId = cusId; // 客户id
 				item.outTime = outTime;
 				item.pnPrice = $(this).find("td").find("input[name='pnPrice']").val();//单价
-				item.pnRemark = $(this).find("td").find("select[name='pnCode']").find("option:selected").attr("data-product-remark");//产品描述
-				item.pnUnit = $(this).find("td").find("select[name='pnCode']").find("option:selected").attr("data-product-unit");//产品单位
-				item.orderId = $(this).find("td").find("select[name='orderCode']").find("option:selected").attr("data-order-id");//订单id
+				item.pnRemark = $(this).find("td").find("input[name='pnRemark']").val();//产品描述
+				item.pnUnit = $(this).find("td").find("input[name='pnUnit']").val();//产品单位
+				item.orderId = $(this).find("td").find("input[name='orderId']").val();//订单id
 				item.outNumber = $(this).find("td").find("input[name='outNumber']").val();//出库数量
 				item.totalPrice = $(this).find("td").find("input[name='totalPrice']").val();//出库金额
 				if (item.outNumber <= 0) {
@@ -168,7 +201,7 @@
 			}
 		});
 		if (detail.length <= 0) {
-			$.modal.alertWarning("请添加退货单明细")
+			$.modal.alertWarning("请添加出库单明细")
 			return;
 		};
 		if (checkCodeNum > 0) {
@@ -178,7 +211,7 @@
 		data.detailList = detail;
 		// 保存客户退货单信息
 		var config = {
-			url: prefix + "/add",
+			url: prefix + "/edit",
 			type: "post",
 			dataType: "json",
 			contentType: 'application/json',

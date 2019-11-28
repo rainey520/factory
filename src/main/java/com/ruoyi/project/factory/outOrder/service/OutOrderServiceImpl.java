@@ -65,7 +65,33 @@ public class OutOrderServiceImpl implements IOutOrderService {
      */
     @Override
     public OutOrder selectOutOrderById(Integer id) {
-        return outOrderMapper.selectOutOrderById(id);
+        OutOrder outOrder = outOrderMapper.selectOutOrderById(id);
+        // 查询客户信息
+        Customer customer = customerMapper.selectCustomerById(outOrder.getCusId());
+        if (customer != null) {
+            outOrder.setCusPhone(StringUtils.isEmpty(customer.getCusPhone()) ? "" : customer.getCusPhone());
+            outOrder.setCusAddress(StringUtils.isEmpty(customer.getCusAddress()) ? "" : customer.getCusAddress());
+        }
+        // 设置明细
+        List<OutOrderDetail> outOrderDetailList = outOrderDetailMapper.selectOutOrderDetailByOutId(outOrder.getId());
+        OrderDetail orderDetail = null;
+        Integer deliveredNum = null;
+        for (OutOrderDetail outOrderDetail : outOrderDetailList) {
+            outOrderDetail.setOutNumber(outOrderDetail.getOutNumber() < 0 ? -outOrderDetail.getOutNumber() : outOrderDetail.getOutNumber());
+            outOrderDetail.setTotalPrice(outOrderDetail.getTotalPrice() < 0 ? -outOrderDetail.getTotalPrice() : outOrderDetail.getTotalPrice());
+            if (outOrderDetail.getOrderId() != null) {
+                orderDetail = orderDetailMapper.selectOrderDetailById(outOrderDetail.getOrderId());
+                if (orderDetail != null) {
+                    // 设置对应产品订单数量
+                    outOrderDetail.setTotalNum(orderDetail.getTotalNum() != null ? orderDetail.getTotalNum() : 0);
+                    // 设置对应产品已交付数量
+                    deliveredNum = outOrderDetailMapper.selectOutOrderDetailByCode(orderDetail.getCompanyId(), orderDetail.getOrderCode(), orderDetail.getCusId(), orderDetail.getPnCode());
+                    outOrderDetail.setDeliveredNum(deliveredNum != null ? deliveredNum : 0);
+                }
+            }
+        }
+        outOrder.setDetailList(outOrderDetailList);
+        return outOrder;
     }
 
     /**
@@ -111,9 +137,49 @@ public class OutOrderServiceImpl implements IOutOrderService {
         } else if (OrderConstants.OUT_TYPE_WJG_INHOUSE.equals(outType)) {
             outCode = CodeUtils.getWjgBackCode();
         }
+        return inserOutInfo(outOrder, user, outType, outCode);
+    }
+
+    /**
+     * 修改出库单主
+     *
+     * @param outOrder 出库单主信息
+     * @return 结果
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int updateOutOrder(OutOrder outOrder) {
+        User user = JwtUtil.getUser();
+        if (user == null) {
+            throw new BusinessException(UserConstants.NOT_LOGIN);
+        }
+
+        // 客户出货退货类型
+        Integer outType = outOrder.getOutType();
+        // 获取出入库单号
+        String outCode = outOrder.getOutCode();
+        // 删除原始出入库信息
+        outOrderMapper.deleteOutOrderById(outOrder.getId());
+        outOrderDetailMapper.deleteOutOrderDetailByOutId(outOrder.getId());
+
+        // 新增
+        return inserOutInfo(outOrder, user, outType, outCode);
+
+    }
+
+    /**
+     * 设置出入库相关信息
+     *
+     * @param outOrder 出入库主表信息
+     * @param user     用户信息
+     * @param outType  出入库类型
+     * @param outCode  出入库单号
+     * @return 结果
+     */
+    private int inserOutInfo(OutOrder outOrder, User user, Integer outType, String outCode) {
         outOrder.setOutCode(outCode);
         outOrder.setCompanyId(user.getCompanyId());
-        outOrder.setOutTime(new Date());
+        outOrder.setcTime(new Date());
         outOrder.setStatus(OrderConstants.OUT_ORDER_NO_CONFIRM);
         outOrderMapper.insertOutOrder(outOrder);
         //订单总数量
@@ -125,7 +191,7 @@ public class OutOrderServiceImpl implements IOutOrderService {
                 outOrderDetail.setOutId(outOrder.getId());
                 outOrderDetail.setOutCode(outCode);
                 outOrderDetail.setCompanyId(user.getCompanyId());
-                outOrderDetail.setOutTime(new Date());
+                outOrderDetail.setcTime(new Date());
                 totalNum += outOrderDetail.getOutNumber();
                 totalPrice += outOrderDetail.getTotalPrice();
                 // 属于客户退货或者外加工入库情况
@@ -143,17 +209,6 @@ public class OutOrderServiceImpl implements IOutOrderService {
         }
         outOrder.setOutNum(totalNum);
         outOrder.setOutPrice(totalPrice);
-        return outOrderMapper.updateOutOrder(outOrder);
-    }
-
-    /**
-     * 修改出库单主
-     *
-     * @param outOrder 出库单主信息
-     * @return 结果
-     */
-    @Override
-    public int updateOutOrder(OutOrder outOrder) {
         return outOrderMapper.updateOutOrder(outOrder);
     }
 
@@ -266,7 +321,7 @@ public class OutOrderServiceImpl implements IOutOrderService {
         for (OutOrderDetail outOrderDetail : outOrderDetailList) {
             pnRemark = outOrderDetail.getPnRemark();
             if (StringUtils.isNotEmpty(pnRemark) && pnRemark.length() >= 19) {
-                outOrderDetail.setPnRemark(pnRemark.substring(0,19)+"..");
+                outOrderDetail.setPnRemark(pnRemark.substring(0, 19) + "..");
             } else {
                 outOrderDetail.setPnRemark(pnRemark);
             }

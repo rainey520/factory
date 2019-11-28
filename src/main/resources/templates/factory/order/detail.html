@@ -1,43 +1,78 @@
 <!DOCTYPE HTML>
 <html lang="zh" xmlns:th="http://www.thymeleaf.org">
 <meta charset="utf-8">
-<head th:include="include :: header"></head>
+<head th:include="include :: header">
+</head>
 <body class="white-bg">
 <div class="wrapper wrapper-content animated fadeInRight ibox-content">
-    <div class="col-sm-12 select-table" th:if="${detailList != null}">
-        <div class="row">
-            <div class="col-sm-12">
-                <div class="ibox float-e-margins">
-                    <table class="table table-striped table-bordered table-hover " id="add-order-table">
+
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <span style="font-weight: bold;font-size: 14px">订单明细</span>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-striped table-bordered table-hover">
                         <thead>
                         <tr>
-                            <th>客户编码</th>
-                            <th>编码描述</th>
-                            <th>价格[含税]</th>
-                            <th>已交数</th>
-                            <th>未交数</th>
-                            <th>总数</th>
-                            <th>金额</th>
+                            <th style="width: 20%">客户编码</th>
+                            <th style="width: 30%">编码描述</th>
+                            <th style="width: 10%">单价</th>
+                            <th style="width: 10%">金额</th>
+                            <th style="width: 10%">总数</th>
+                            <th style="width: 10%;color: green">已交数</th>
+                            <th style="width: 10%;color: red">未交数</th>
+
                         </tr>
                         </thead>
                         <tbody id="add-order-table-body">
-                        <tr th:each="item:${detailList}">
+                        <tr th:if="${not #lists.isEmpty(detailList)}" th:each="item:${detailList}">
                             <td><span th:utext="${item.pnCode}"></span></td>
                             <td><span th:utext="${item.pnRemark}"></span></td>
                             <td><span th:utext="${item.unitPrice}"></span></td>
-                            <td><span th:utext="${item.deliveredNum}"></span></td>
-                            <td><span th:utext="${item.undeliveredNum}"></span></td>
-                            <td><span th:utext="${item.totalNum}"></span></td>
                             <td><span th:utext="${item.totalPrice}"></span></td>
+                            <td><span th:utext="${item.totalNum}"></span></td>
+                            <td><span style="color: green;font-weight: bold" th:utext="${item.deliveredNum}"></span></td>
+                            <td><span style="color: red;font-weight: bold" th:utext="${item.totalNum - item.deliveredNum}"></span></td>
                         </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="col-sm-12 select-table" th:if="${detailList == null}">
-        <h1>未找到相关订单信息</h1>
+        <div class="col-sm-12">
+            <div class="panel panel-success">
+                <div class="panel-heading">
+                    <span style="font-weight: bold;font-size: 14px">订单所有出入库明细</span>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-striped table-bordered table-hover ">
+                        <thead>
+                        <tr>
+                            <th style="width: 20%">出入库单号</th>
+                            <th style="width: 30%">产品信息</th>
+                            <th style="width: 15%">出入库数量</th>
+                            <th style="width: 15%">交付时间</th>
+                            <th style="width: 20%">创建时间</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${not #lists.isEmpty(outList)}" th:each="item:${outList}">
+                            <td><span th:utext="${item.outCode}"></span></td>
+                            <td><span th:utext="${item.pnCode}"></span></td>
+                            <td>
+                                <span th:if="${item.outNumber > 0}" style="color: green;font-weight: bold" th:utext="${item.outNumber}"></span>
+                                <span th:if="${item.outNumber < 0}" style="color: red;font-weight: bold" th:utext="${item.outNumber}"></span>
+                            </td>
+                            <td><span th:utext="${#dates.format(item.outTime,'yyyy-MM-dd')}"></span></td>
+                            <td><span th:utext="${#dates.format(item.cTime,'yyyy-MM-dd HH:mm')}"></span></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 <div th:include="include::footer"></div>

@@ -20,10 +20,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="totalPrice"    column="total_price"    />
         <result property="outRemark"    column="out_remark"    />
         <result property="outTime"    column="out_time"    />
+        <result property="cTime"    column="c_time"    />
     </resultMap>
 	
 	<sql id="selectOutOrderDetailVo">
-        select id, company_id, cus_id, out_id,out_code, order_id, order_code, out_number, pn_price, pn_code,pn_unit, pn_remark, total_price, out_remark, out_time from fac_out_order_detail
+        select id, company_id, cus_id, out_id,out_code, order_id, order_code, out_number, pn_price, pn_code,pn_unit, pn_remark,
+         total_price, out_remark, out_time,c_time from fac_out_order_detail
     </sql>
 	
     <select id="selectOutOrderDetailList" parameterType="OutOrderDetail" resultMap="OutOrderDetailResult">
@@ -66,6 +68,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			<if test="totalPrice != null  ">total_price,</if>
 			<if test="outRemark != null  and outRemark != ''  ">out_remark,</if>
 			<if test="outTime != null  ">out_time,</if>
+            <if test="cTime != null  ">c_time,</if>
             <if test="outCode != null and outCode != '' ">out_code,</if>
             <if test="pnUnit != null and pnUnit != '' ">pn_unit,</if>
          </trim>
@@ -82,6 +85,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			<if test="totalPrice != null  ">#{totalPrice},</if>
 			<if test="outRemark != null  and outRemark != ''  ">#{outRemark},</if>
 			<if test="outTime != null  ">#{outTime},</if>
+            <if test="cTime != null  ">#{cTime},</if>
             <if test="outCode != null and outCode != '' ">#{outCode},</if>
             <if test="pnUnit != null and pnUnit != '' ">#{pnUnit},</if>
          </trim>
@@ -102,6 +106,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="totalPrice != null  ">total_price = #{totalPrice},</if>
             <if test="outRemark != null  and outRemark != ''  ">out_remark = #{outRemark},</if>
             <if test="outTime != null  ">out_time = #{outTime},</if>
+            <if test="cTime != null  ">c_time = #{cTime},</if>
             <if test="outCode != null and outCode != '' ">out_code = #{outCode},</if>
             <if test="pnUnit != null and pnUnit != '' ">pn_unit = #{pnUnit},</if>
         </trim>
@@ -110,6 +115,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
 	<delete id="deleteOutOrderDetailById" parameterType="Integer">
         delete from fac_out_order_detail where id = #{id}
+    </delete>
+
+    <delete id="deleteOutOrderDetailByOutId" parameterType="Integer">
+        delete from fac_out_order_detail where out_id = #{outId}
     </delete>
 	
     <delete id="deleteOutOrderDetailByIds" parameterType="String">
@@ -127,7 +136,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <!--查询对账明细-->
     <select id="selectRecordExcelList" resultMap="OutOrderDetailResult">
-        SELECT b.* FROM fac_out_order as a,fac_out_order_detail as b where a.id = b.out_id and a.status = 1
+        SELECT b.* FROM fac_out_order as a,fac_out_order_detail as b where a.id = b.out_id
         and b.company_id = #{companyId} and b.cus_id = #{cusId} and b.out_time between #{sTime} and #{eTime}
         order by out_time desc
     </select>
@@ -139,5 +148,24 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
+
+    <!--查询已交付数量-->
+    <select id="selectOutOrderDetailByCode" resultType="java.lang.Integer">
+        SELECT sum(out_number) FROM fac_out_order_detail where  company_id = #{companyId}
+        <if test="cusId != null">
+            and cus_id = #{cusId}
+        </if>
+        <if test="orderCode != null and orderCode != ''">
+            and order_code = #{orderCode}
+        </if>
+        <if test="pnCode != null and pnCode != ''">
+            and pn_code = #{pnCode}
+        </if>
+    </select>
+
+    <!--通过订单号查询所有的出入库明细-->
+    <select id="selectOutOrderDetailListByOrderCode" resultMap="OutOrderDetailResult">
+        select * from fac_out_order_detail where company_id = #{companyId} and order_code = #{orderCode} order by c_time desc
+    </select>
     
 </mapper>

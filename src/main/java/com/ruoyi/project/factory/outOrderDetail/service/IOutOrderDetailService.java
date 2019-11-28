@@ -50,5 +50,11 @@ public interface IOutOrderDetailService
      * @return 结果
      */
 	public int deleteOutOrderDetailByIds(String ids);
-	
+
+	/**
+	 * 通过订单号查询所有的出入库明细
+	 * @param orderCode 订单号
+	 * @return 结果
+	 */
+    List<OutOrderDetail> selectOutOrderDetailListByOrderCode(String orderCode);
 }

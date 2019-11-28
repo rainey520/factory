@@ -1,5 +1,6 @@
 package com.ruoyi.project.factory.outOrder.controller;
 
+import com.ruoyi.common.constant.OrderConstants;
 import com.ruoyi.common.exception.BusinessException;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.framework.aspectj.lang.annotation.Log;
@@ -106,13 +107,22 @@ public class OutOrderController extends BaseController {
     }
 
     /**
-     * 修改出库单主
+     * 修改明细信息
      */
-    @GetMapping("/edit/{id}")
-    public String edit(@PathVariable("id") Integer id, ModelMap mmap) {
+    @GetMapping("/edit")
+    public String edit(Integer id, ModelMap mmap) {
         OutOrder outOrder = outOrderService.selectOutOrderById(id);
         mmap.put("outOrder", outOrder);
-        return prefix + "/edit";
+        // 加工厂
+        if (OrderConstants.OUT_TYPE_WJG_OUTHOUSE.equals(outOrder.getOutType()) || OrderConstants.OUT_TYPE_WJG_INHOUSE.equals(outOrder.getOutType())) {
+            return prefix + "/editHandOut";
+            // 客户出库
+        } else if (OrderConstants.OUT_TYPE_CUS_OUT.equals(outOrder.getOutType())) {
+            return prefix + "/editCusOut";
+            // 客户退货
+        } else {
+            return prefix + "/editCusBack";
+        }
     }
 
     /**
@@ -122,7 +132,7 @@ public class OutOrderController extends BaseController {
     @Log(title = "出库单主", businessType = BusinessType.UPDATE)
     @PostMapping("/edit")
     @ResponseBody
-    public AjaxResult editSave(OutOrder outOrder) {
+    public AjaxResult editSave(@RequestBody OutOrder outOrder) {
         return toAjax(outOrderService.updateOutOrder(outOrder));
     }
 

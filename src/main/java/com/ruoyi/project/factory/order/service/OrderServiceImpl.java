@@ -13,6 +13,7 @@ import com.ruoyi.project.factory.order.domain.Order;
 import com.ruoyi.project.factory.order.mapper.OrderMapper;
 import com.ruoyi.project.factory.orderDetail.domain.OrderDetail;
 import com.ruoyi.project.factory.orderDetail.mapper.OrderDetailMapper;
+import com.ruoyi.project.factory.outOrderDetail.mapper.OutOrderDetailMapper;
 import com.ruoyi.project.iso.filesource.domain.FileSourceInfo;
 import com.ruoyi.project.iso.filesource.mapper.FileSourceInfoMapper;
 import com.ruoyi.project.system.user.domain.User;
@@ -40,6 +41,9 @@ public class OrderServiceImpl implements IOrderService {
 
     @Autowired
     private CustomerMapper customerMapper;
+
+    @Autowired
+    private OutOrderDetailMapper outOrderDetailMapper;
 
     @Autowired
     private FileSourceInfoMapper fileSourceInfoMapper;
@@ -72,7 +76,24 @@ public class OrderServiceImpl implements IOrderService {
      */
     @Override
     public List<Order> selectOrderList(Order order) {
-        return orderMapper.selectOrderList(order);
+        User user = JwtUtil.getUser();
+        if (user == null) {
+            return Collections.emptyList();
+        }
+        List<Order> orders = orderMapper.selectOrderList(order);
+        Integer deliveredNum = null;
+        for (Order o : orders) {
+            deliveredNum = outOrderDetailMapper.selectOutOrderDetailByCode(user.getCompanyId(), o.getOrderCode(), o.getCusId(), null);
+            if (!OrderConstants.DELIVERED.equals(o.getStatus())) {
+                if (deliveredNum == null) {
+                    o.setStatus(OrderConstants.UN_DELIVERED);
+                } else{
+                    o.setStatus(OrderConstants.IN_DELIVERY);
+                }
+            }
+            o.setDeliveredNum(deliveredNum == null ? 0 : deliveredNum);
+        }
+        return orders;
     }
 
     /**
@@ -114,8 +135,9 @@ public class OrderServiceImpl implements IOrderService {
 
     /**
      * 新增订单信息
+     *
      * @param order 订单信息
-     * @param user 用户信息
+     * @param user  用户信息
      * @return 结果
      */
     private int insertOrder(Order order, User user) {
@@ -176,6 +198,7 @@ public class OrderServiceImpl implements IOrderService {
 
     /**
      * 通过客户id查询对应的订单列表
+     *
      * @param cusId 客户id
      * @return 结果
      */
@@ -185,11 +208,12 @@ public class OrderServiceImpl implements IOrderService {
         if (user == null) {
             return Collections.emptyList();
         }
-        return orderMapper.selectOrderListByCusId(user.getCompanyId(),cusId);
+        return orderMapper.selectOrderListByCusId(user.getCompanyId(), cusId);
     }
 
     /**
      * 校验订单唯一性
+     *
      * @param order 订单信息
      * @return 结果
      */
@@ -199,7 +223,7 @@ public class OrderServiceImpl implements IOrderService {
         if (user == null) {
             return OrderConstants.NAME_NOT_UNIQUE;
         }
-        Order uniOrder = orderMapper.selectOrderByOrderCode(user.getCompanyId(),order.getOrderCode());
+        Order uniOrder = orderMapper.selectOrderByOrderCode(user.getCompanyId(), order.getOrderCode());
         if (uniOrder != null && !uniOrder.getId().equals(order.getId())) {
             return OrderConstants.NAME_NOT_UNIQUE;
         }
@@ -208,6 +232,7 @@ public class OrderServiceImpl implements IOrderService {
 
     /**
      * 关闭订单
+     *
      * @param order 订单信息
      * @return 结果
      */
@@ -222,32 +247,53 @@ public class OrderServiceImpl implements IOrderService {
             if (uniOrder == null) {
                 throw new BusinessException("订单不存在或被删除");
             }
-            if (uniOrder.getTotalNumber() > uniOrder.getDeliveredNum()) {
+            Integer deliveredNum = outOrderDetailMapper.selectOutOrderDetailByCode(user.getCompanyId(), uniOrder.getOrderCode(), uniOrder.getCusId(), null);
+            if (deliveredNum == null) {
+                deliveredNum = 0;
+            }
+            if (uniOrder.getTotalNumber() > deliveredNum && !OrderConstants.DELIVERED.equals(uniOrder.getStatus())) {
                 throw new BusinessException("该订单未完全交付,不能关闭");
             }
-            uniOrder.setStatus(OrderConstants.DELIVERED);
-            return orderMapper.updateOrder(uniOrder);
+            if (uniOrder.getTotalNumber() <= deliveredNum && OrderConstants.DELIVERED.equals(uniOrder.getStatus())) {
+                throw new BusinessException("该订单已交付完，开启失败");
+            }
+            return orderMapper.updateOrder(order);
         }
         return 0;
     }
 
     /**
      * 查询未关闭的订单
+     *
      * @return 结果
      */
-    public List<Order> selectOrderNoClose(){
+    public List<Order> selectOrderNoClose() {
         User user = JwtUtil.getUser();
         if (user == null) {
             return Collections.emptyList();
         }
-        return orderMapper.selectOrderNoClose(user.getCompanyId(),OrderConstants.DELIVERED);
+        List<Order> orders = orderMapper.selectOrderNoClose(user.getCompanyId(), OrderConstants.DELIVERED);
+        Integer deliveredNum = null;
+        for (Order o : orders) {
+            deliveredNum = outOrderDetailMapper.selectOutOrderDetailByCode(user.getCompanyId(), o.getOrderCode(), o.getCusId(), null);
+            if (!OrderConstants.DELIVERED.equals(o.getStatus())) {
+                if (deliveredNum == null) {
+                    o.setStatus(OrderConstants.UN_DELIVERED);
+                } else{
+                    o.setStatus(OrderConstants.IN_DELIVERY);
+                }
+            }
+            o.setDeliveredNum(deliveredNum == null ? 0 : deliveredNum);
+        }
+        return orders;
     }
 
     /**
      * 查询公司所有的订单信息
+     *
      * @return 订单信息
      */
-    public List<Order> selectOrderListByComId(){
+    public List<Order> selectOrderListByComId() {
         User user = JwtUtil.getUser();
         if (user == null) {
             return Collections.emptyList();

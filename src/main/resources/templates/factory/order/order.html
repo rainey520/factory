@@ -179,12 +179,12 @@
                     align: 'center',
                     formatter: function (value, row, index) {
                         var actions = [];
-                        actions.push('<a class="btn btn-warning btn-xs ' + listFlag + '" href="#" onclick="showOrderDetail(\'' + row.id + '\')"><i class="fa fa-eye"></i>明细</a> ');
+                        actions.push('<a class="btn btn-warning btn-xs ' + listFlag + '" href="#" onclick="showOrderDetail(\''+ row.id+ '\',\'' + row.orderCode + '\')"><i class="fa fa-eye"></i>明细</a> ');
                         actions.push('<a class="btn btn-primary btn-xs ' + addFlag + '" href="#" onclick="showFileInfo(\'' + row.id + '\')"><i></i>文件管理</a> ');
-                        if (row.status == 1) {
-                            actions.push('<a class="btn btn-primary btn-xs ' + removeFlag + '" href="#" onclick="closeOrder(\'' + row.id + '\')"><i class="fa fa-minus-square-o"></i>关闭</a> ');
+                        if (row.status == 2) {
+                            actions.push('<a class="btn btn-primary btn-xs ' + removeFlag + '" href="javascript:void(0)" onclick="closeOrder(\'' + row.id + '\',0)"><i class="fa fa-bullseye"></i>开启</a> ');
                         } else {
-                            actions.push('<a class="btn btn-primary btn-xs ' + removeFlag + '" disabled="true"><i class="fa fa-minus-square-o"></i>关闭</a> ');
+                            actions.push('<a class="btn btn-danger btn-xs ' + removeFlag + '" href="javascript:void(0)" onclick="closeOrder(\'' + row.id + '\',2)"><i class="fa fa-minus-square-o"></i>关闭</a> ');
                         }
                         if (row.status == 0) {
                             actions.push('<a class="btn btn-success btn-xs ' + addFlag + '" href="#" onclick="editOrder(\'' + row.id + '\')"><i class="fa fa-edit"></i>修改</a> ');
@@ -210,17 +210,21 @@
     /**
      * 查看订单明细
      */
-    function showOrderDetail(id) {
-        var url = prefix + "/detail?id=" + id;
-        $.modal.open("订单明细",url);
+    function showOrderDetail(id,orderCode) {
+        var url = prefix + "/detail?orderCode=" + orderCode + "&id=" + id;
+        $.modal.open(orderCode + "--订单与出入库明细",url);
     }
 
     /**
      * 关闭订单
      */
-    function closeOrder(id) {
-        $.modal.confirm("确认关闭该订单吗？",function (res) {
-            var data = {id:id};
+    function closeOrder(id,status) {
+        var msg = "确认关闭订单吗？";
+        if (status == 0) {
+            msg = "确认重新开启订单吗？"
+        }
+        $.modal.confirm(msg,function (res) {
+            var data = {id:id,status:status};
             $.operate.post(prefix + "/closeOrder",data);
         })
     }

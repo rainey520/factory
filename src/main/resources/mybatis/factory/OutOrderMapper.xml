@@ -15,13 +15,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="outPrice"    column="out_price"    />
         <result property="status"    column="status"    />
         <result property="remark"    column="remark"    />
+        <result property="cTime"    column="c_time"    />
         <association property="cusName" column="cus_id" select="selectCusName">
             <result property="cusName" column="cus_name"/>
         </association>
     </resultMap>
 	
 	<sql id="selectOutOrderVo">
-        select id, company_id, cus_id, out_code, out_type, out_time,out_num,out_price,status,remark from fac_out_order
+        select id, company_id, cus_id, out_code, out_type, out_time,out_num,out_price,status,remark,c_time from fac_out_order
     </sql>
 	
     <select id="selectOutOrderList" parameterType="OutOrder" resultMap="OutOrderResult">
@@ -66,7 +67,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="outNum != null  ">out_num,</if>
             <if test="outPrice != null  ">out_price,</if>
             <if test="status != null  ">status,</if>
-            <if test="remark != null and remark != '' ">status,</if>
+            <if test="remark != null and remark != '' ">remark,</if>
+            <if test="cTime != null  ">c_time,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
 			<if test="companyId != null  ">#{companyId},</if>
@@ -78,6 +80,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="outPrice != null  ">#{outPrice},</if>
             <if test="status != null  ">#{status},</if>
             <if test="remark != null and remark != '' ">#{remark},</if>
+            <if test="cTime != null  ">#{cTime},</if>
          </trim>
     </insert>
 	 
@@ -93,6 +96,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="outPrice != null  ">out_price = #{outPrice},</if>
             <if test="status != null  ">status = #{status},</if>
             <if test="remark != null and remark != '' ">remark = #{remark},</if>
+            <if test="cTime != null  ">c_time = #{cTime},</if>
         </trim>
         where id = #{id}
     </update>

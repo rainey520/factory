@@ -45,9 +45,40 @@ public class OutOrderDetail extends BaseEntity
 	private Float totalPrice;
 	/** 明细描述信息 */
 	private String outRemark;
-	/** 创建时间 */
+	/** 实际交付日期 */
 	@JsonFormat(pattern = "yyyy-MM-dd")
 	private Date outTime;
+	/** 创建时间 */
+	private Date cTime;
+	/** 总交付数量 */
+	private int totalNum;
+	/** 已交付总数量 */
+	private int deliveredNum;
+
+
+	public int getTotalNum() {
+		return totalNum;
+	}
+
+	public void setTotalNum(int totalNum) {
+		this.totalNum = totalNum;
+	}
+
+	public int getDeliveredNum() {
+		return deliveredNum;
+	}
+
+	public void setDeliveredNum(int deliveredNum) {
+		this.deliveredNum = deliveredNum;
+	}
+
+	public Date getcTime() {
+		return cTime;
+	}
+
+	public void setcTime(Date cTime) {
+		this.cTime = cTime;
+	}
 
 	public String getPnUnit() {
 		return pnUnit;

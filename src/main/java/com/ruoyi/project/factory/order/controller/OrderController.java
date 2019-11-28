@@ -12,6 +12,8 @@ import com.ruoyi.project.factory.order.domain.Order;
 import com.ruoyi.project.factory.order.service.IOrderService;
 import com.ruoyi.project.factory.orderDetail.domain.OrderDetail;
 import com.ruoyi.project.factory.orderDetail.service.IOrderDetailService;
+import com.ruoyi.project.factory.outOrderDetail.domain.OutOrderDetail;
+import com.ruoyi.project.factory.outOrderDetail.service.IOutOrderDetailService;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -36,6 +38,9 @@ public class OrderController extends BaseController {
 
     @Autowired
     private IOrderDetailService orderDetailService;
+
+    @Autowired
+    private IOutOrderDetailService outOrderDetailService;
 
     @RequiresPermissions("factory:order:list")
     @GetMapping()
@@ -95,9 +100,11 @@ public class OrderController extends BaseController {
      * 查看订单明细
      */
     @GetMapping("/detail")
-    public String detail(Integer id, ModelMap map) {
+    public String detail(String orderCode,Integer id, ModelMap map) {
         List<OrderDetail> detailList = orderDetailService.selectOrderByOrderId(id);
+        List<OutOrderDetail> outList = outOrderDetailService.selectOutOrderDetailListByOrderCode(orderCode);
         map.put("detailList", detailList);
+        map.put("outList", outList);
         return prefix + "/detail" ;
     }
 

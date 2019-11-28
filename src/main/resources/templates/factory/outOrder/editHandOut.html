@@ -4,23 +4,28 @@
 <head th:include="include :: header"></head>
 <body class="white-bg">
 <div class="wrapper wrapper-content animated fadeInRight ibox-content">
-    <div class="col-sm-12 select-table">
+    <div class="col-sm-12 select-table" th:if="${outOrder != null}">
+        <input type="hidden" id="outType" name="outType" th:value="${outOrder.outType}">
+        <input type="hidden" id="id" name="id" th:value="${outOrder.id}">
+        <input type="hidden" id="outCode" name="outCode" th:value="${outOrder.outCode}">
         <div class="row">
-            <div class="col-sm-3">
+            <div class="col-sm-4">
                 <div class="ibox float-e-margins">
                     <div class="ibox-title">
-                        <h5>订单数据</h5>
+                        <h5 th:if="${outOrder.outType == 2}">外加工出库单</h5>
+                        <h5 th:if="${outOrder.outType == 3}">外加工入库单</h5>
                     </div>
                     <div class="ibox-content">
-                        <form role="form" id="form-order-add">
+                        <form role="form" id="form-page-add">
                             <div class="form-group">
-                                <label class="col-sm-12 control-label" style="margin-top: 10px;">客户：</label>
+                                <label class="col-sm-12 control-label" style="margin-top: 10px;">加工厂：</label>
                                 <div class="col-sm-12">
                                     <select style="width: 100%" id="cusId" class="form-control" name="cusId"
                                             onchange="customerChange(this)"
-                                            th:with="customer = ${@customer.selectCustomerListByComId(1)}">
+                                            th:with="customer = ${@customer.selectCustomerListByComId(2)}">
                                         <option value="-1">请选择</option>
                                         <option th:each="item : ${customer}" th:data-id="${item.id}"
+                                                th:selected="${item.id == outOrder.cusId}"
                                                 th:data-phone="${item.cusPhone}"
                                                 th:data-address="${item.cusAddress}" th:text="${item.cusName}"
                                                 th:value="${item.id}"></option>
@@ -28,28 +33,25 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-12 control-label" style="margin-top: 10px;">订单号：</label>
-                                <div class="col-sm-12">
-                                    <input id="orderCode" type="text" class="form-control" name="orderCode"/>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-12 control-label" style="margin-top: 10px;">交付日期：</label>
-                                <div class="col-sm-12">
-                                    <input id="deliverTime" name="deliverTime" class="form-control time-input">
-                                </div>
-                            </div>
-                            <div class="form-group">
                                 <label class="col-sm-12 control-label" style="margin-top: 10px;">联系方式：</label>
                                 <div class="col-sm-12">
                                     <input type="text" id="cusPhone" class="form-control"
+                                           th:value="${outOrder.cusPhone != null? outOrder.cusPhone:''}"
                                            name="cusPhone"/>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-12 control-label" style="margin-top: 10px;">实际交付日期：</label>
+                                <div class="col-sm-12">
+                                    <input id="outTime" name="outTime" class="form-control time-input"
+                                           th:value="${#dates.format(outOrder.outTime,'yyyy-MM-dd')}">
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-12 control-label" style="margin-top: 10px;">收货地址：</label>
                                 <div class="col-sm-12">
                                     <textarea id="cusAddress" rows="4" class="form-control" type="text"
+                                              th:text="${outOrder.cusAddress != null? outOrder.cusAddress:''}"
                                               name="cusAddress"></textarea>
                                 </div>
                             </div>
@@ -57,13 +59,18 @@
                                 <label class="col-sm-12 control-label" style="margin-top: 10px;">备注信息：</label>
                                 <div class="col-sm-12">
                                     <textarea id="remark" class="form-control" rows="4" type="text"
+                                              th:text="${outOrder.remark}"
                                               name="remark"></textarea>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <div style="width: 100%;text-align: center;">
                                     <a class="btn btn-primary btn-rounded btn-sm" style="margin-top: 15px"
-                                       onclick="submitHandler()"><i class="fa fa-save"></i>&nbsp;生成订单</a>
+                                       th:if="${outOrder.outType == 2}"
+                                       onclick="submitHandler()"><i class="fa fa-save"></i>&nbsp;生成出库单</a>
+                                    <a class="btn btn-primary btn-rounded btn-sm" style="margin-top: 15px"
+                                       th:if="${outOrder.outType == 3}"
+                                       onclick="submitHandler()"><i class="fa fa-save"></i>&nbsp;生成入库单</a>
                                     <a class="btn btn-primary btn-rounded btn-sm" style="margin-top: 15px"
                                        onclick="addProduct()"><i class="fa fa-plus"></i>&nbsp;添加详情数据</a>
                                 </div>
@@ -72,25 +79,40 @@
                     </div>
                 </div>
             </div>
-            <div class="col-sm-9">
+            <div class="col-sm-8">
                 <div class="ibox float-e-margins">
                     <div class="ibox-title">
-                        <h5>订单详情</h5>
+                        <h5 th:if="${outOrder.outType == 2}">外加工出库单明细</h5>
+                        <h5 th:if="${outOrder.outType == 3}">外加工入库单明细</h5>
                     </div>
                     <div class="ibox-content">
                         <table class="table table-striped table-bordered table-hover " id="add-order-table">
                             <thead>
                             <tr>
-                                <th style="width: 20%">客户编码</th>
-                                <th style="width: 30%">编码描述</th>
+                                <th style="width: 15%">客户编码</th>
+                                <th style="width: 25%">编码描述</th>
                                 <th style="width: 10%">价格[含税]</th>
                                 <th style="width: 10%">单位</th>
-                                <th style="width: 10%">数量</th>
+                                <th style="width: 15%" th:if="${outOrder.outType == 2}">本次出库数量</th>
+                                <th style="width: 15%" th:if="${outOrder.outType == 3}">本次入库数量</th>
                                 <th style="width: 15%">合计</th>
                                 <th style="width: 5%">操作</th>
                             </tr>
                             </thead>
                             <tbody id="add-order-table-body">
+                            <tr th:if="${not #lists.isEmpty(outOrder.detailList)}" th:each="item:${outOrder.detailList}">
+                                <td>
+                                    <select name="pnCode"  class="selectpicker show-tick form-control">
+                                        <option th:value="${item.pnCode}" th:text="${item.pnCode}"></option>
+                                    </select>
+                                </td>
+                                <td><input name="pnRemark" class="form-control" th:value="${item.pnRemark}" type="text" readonly="true"></td>
+                                <td><input name="unitPrice" class="form-control" th:value="${item.pnPrice}" type="text" readonly="true"></td>
+                                <td><input name="pnUnit" class="form-control" th:value="${item.pnUnit}" type="text" readonly="true"></td>
+                                <td><input name="number" class="form-control" th:value="${item.outNumber}" type="number" value="0" onchange="numberChange(this)"></td>
+                                <td><input name="totalPrice"  readonly="true" th:value="${item.totalPrice}" class="form-control" type="number"></td>
+                                <td><a  class="btn btn-danger btn-rounded btn-sm" onclick="removeRow(this)"><i></i>&nbsp;删除</a></td>
+                            </tr>
                             </tbody>
                         </table>
                     </div>
@@ -98,35 +120,19 @@
             </div>
         </div>
     </div>
+    <div th:if="${outOrder == null}">
+        <h1>没有相关明细信息</h1>
+    </div>
 </div>
 <div th:include="include::footer"></div>
 <script th:inline="javascript">
-    var prefix = ctx + "factory/order"
+    var prefix = ctx + "factory/outOrder"
     $("#form-order-add").validate({
         rules: {
-            orderCode: {
+            xxxx: {
                 required: true,
-                remote: {
-                    url: prefix + "/checkOrderCode",
-                    type: "post",
-                    dataType: "json",
-                    data: {
-                        name : function() {
-                            return $.common.trim($("#orderCode").val());
-                        }
-                    },
-                    dataFilter: function(data, type) {
-                        return $.validate.unique(data);
-                    }
-                }
-            },
-        },
-        messages: {
-            "orderCode": {
-                remote: "订单号已存在重新输入"
             },
         }
-
     });
 
     /**
@@ -145,99 +151,94 @@
     }
 
     function submitHandler() {
-        if ($.validate.form()) {
-            // 客户信息
-            var cusId = $("#cusId").find("option:selected").val();
-            if (cusId == "" || cusId <= 0) {
-                $.modal.alertWarning("请选择客户");
-                return;
-            }
-            // 获取订单号
-            var orderCode = $("#orderCode").val();
-            if ($.common.isEmpty(orderCode)) {
-                $.modal.alertWarning("请输入订单号");
-                return;
-            }
-            var deliverTime = $("#deliverTime").val();
-            if (!deliverTime) {
-                $.modal.alertWarning("请选择交付日期")
-                return;
-            }
-            //封装订单主表信息
-            var remark = $("#remark").val();//备注信息
-            var data = {
-                cusId: cusId,
-                orderCode: orderCode,
-                deliverTime: deliverTime,
-                remark: remark
-            }
-            // 订单明细
-            //封装下单详情
-            var checkCodeNum = 0;
-            var checkNum = 0;
-            var checkCodeArray = new Array();
-            var detail = [];
-            $("#add-order-table-body").find("tr").each(function () {
-                var item = {};
-                var pnCode = $(this).find("td").find("option:selected").val();
-                if (pnCode && pnCode != -1) {
-                    item.cusId = cusId; // 客户id
-                    item.pnCode = pnCode; // 客户编码
-                    item.orderCode = orderCode; // 订单编号
-                    item.pnRemark = $(this).find("td").find("input[name='pnRemark']").val();//编码描述
-                    item.unitPrice = $(this).find("td").find("input[name='unitPrice']").val();//单价
-                    item.pnUnit = $(this).find("td").find("input[name='pnUnit']").val();//单位
-                    item.totalNum = $(this).find("td").find("input[name='number']").val();//总交互数量
-                    if (item.totalNum <= 0) {
-                        checkNum ++;
-                    }
-                    item.totalPrice = $(this).find("td").find("input[name='totalPrice']").val();//合计
-                    var index = $.inArray(item.pnCode, checkCodeArray);
-                    if (index >= 0) {
-                        checkCodeNum++;
-                    } else {
-                        checkCodeArray.push(item.pnCode);
-                    }
-                    detail.push(item);
-                }
-            });
-            if (detail.length <= 0) {
-                $.modal.alertWarning("请添加订单明细")
-                return;
-            }
-            if (checkCodeNum > 0) {
-                $.modal.alertWarning("明细存在相同的客户编码");
-                return;
-            }
-            if (checkNum > 0) {
-                $.modal.alertWarning("请检查数量是否填写正确")
-                return;
-            }
-            data.detailList = detail;
-            // 保存订单信息
-            var config = {
-                url: prefix + "/add",
-                type: "post",
-                dataType: "json",
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                beforeSend: function () {
-                    $.modal.loading("正在处理中，请稍后...");
-                    $.modal.disable();
-                },
-                success: function (result) {
-                    if (result.code == web_status.SUCCESS) {
-                        $.modal.confirm("下单成功", function () {
-                            $("#add-order-table-body").find("tr").remove();
-                        });
-                    } else {
-                        $.modal.alertError(result.msg);
-                    }
-                    $.modal.closeLoading();
-                }
-            };
-            $.ajax(config)
+        // 客户信息
+        var cusId = $("#cusId").find("option:selected").val();
+        if (cusId == "" || cusId <= 0) {
+            $.modal.alertWarning("请选择客户");
+            return;
         }
+        var outTime = $("#outTime").val();
+        if ($.common.isEmpty(outTime)) {
+            $.modal.alertWarning("请选择实际交付日期");
+            return;
+        }
+        //封装订单主表信息
+        var remark = $("#remark").val();//备注信息
+        var data = {
+            outType: $("#outType").val(),
+            cusId: cusId,
+            remark: remark,
+            outTime: outTime,
+            id:$("#id").val(),
+            outCode:$("#outCode").val()
+        }
+        //封装下单详情
+        var detail = [];
+        var checkNum = 0;
+        var checkCodeNum = 0;
+        var checkCodeArray = new Array();
+        $("#add-order-table-body").find("tr").each(function () {
+            var item = {};
+            var pnCode = $(this).find("td").find("option:selected").val();
+            if (pnCode && pnCode != -1) {
+                item.cusId = cusId; // 客户id
+                item.outType = $("#outType").val(); // 类型
+                item.pnCode = pnCode; // 客户编码
+                item.outTime = outTime;
+                item.pnRemark = $(this).find("td").find("input[name='pnRemark']").val();//编码描述
+                item.pnPrice = $(this).find("td").find("input[name='unitPrice']").val();//单价
+                item.pnUnit = $(this).find("td").find("input[name='pnUnit']").val();//单位
+                item.outNumber = $(this).find("td").find("input[name='number']").val();//总交互数量
+                if (item.outNumber <= 0) {
+                    checkNum++;
+                }
+                var index = $.inArray(item.pnCode, checkCodeArray);
+                if (index >= 0) {
+                    checkCodeNum++;
+                } else {
+                    checkCodeArray.push(item.pnCode);
+                }
+                item.totalPrice = $(this).find("td").find("input[name='totalPrice']").val();//合计
+                detail.push(item);
+            }
+        });
+        if (detail.length <= 0) {
+            $.modal.alertWarning("请添加明细")
+            return;
+        }
+        if (checkCodeNum > 0) {
+            $.modal.alertWarning("明细存在相同的客户编码");
+            return;
+        }
+        if (checkNum > 0) {
+            $.modal.alertWarning("请检查数量是否填写正确")
+            return;
+        }
+        data.detailList = detail;
+        console.log(JSON.stringify(data));
+        // 保存信息
+        var config = {
+            url: prefix + "/edit",
+            type: "post",
+            dataType: "json",
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            beforeSend: function () {
+                $.modal.loading("正在处理中，请稍后...");
+                $.modal.disable();
+            },
+            success: function (result) {
+                if (result.code == web_status.SUCCESS) {
+                    $.modal.confirm("下单成功", function () {
+                        $("#add-order-table-body").find("tr").remove();
+                    });
+                } else {
+                    $.modal.alertError(result.msg);
+                }
+                $.modal.closeLoading();
+            }
+        };
+        $.ajax(config)
     }
 
     /**
@@ -250,7 +251,7 @@
             return;
         }
         var item = [];
-        $.post(ctx + "factory/codeInfo/selectPnCodeListByCusId", {cusId: cusId}, function (res) {
+        $.post(ctx + "factory/codeInfo/selectPnCodeList", function (res) {
             if (res && res.code == web_status.SUCCESS) {
                 var data = res.data;
                 item.push("<option value='-1' >请选择</option>")
@@ -258,7 +259,8 @@
                     item.push("<option value='" + data[i].pnCode + "' data-product-id='" + data[i].id + "' " +
                         "data-product-remark='" + data[i].pnRemark + "' data-product-unit='" + data[i].pnUnit + "' " +
                         " data-product-price='" + data[i].pnPrice + "'>" + data[i].pnCode + "</option>")
-                };
+                }
+                ;
                 var textDetail = '<tr>' +
                     '<td><select name="pnCode" class="selectpicker show-tick form-control"  data-live-search="true" ' +
                     'style="min-width: 180px;" onchange="productChange(this)" >' + item +
@@ -310,9 +312,14 @@
      * @param val
      */
     function numberChange(val) {
+        var outNum = $(val).val();
+        if (outNum < 0) {
+            $(val).parent("td").find("input[name='number']").val(0);
+            outNum = 0;
+        }
         var price = $(val).parent("td").siblings("td").find("input[name='unitPrice']").val();
         if (price) {
-            $(val).parent("td").siblings("td").find("input[name='totalPrice']").val((parseFloat(price).toFixed(2) * parseInt($(val).val())).toFixed(2));
+            $(val).parent("td").siblings("td").find("input[name='totalPrice']").val((parseFloat(price).toFixed(2) * parseInt(outNum)).toFixed(2));
         } else {
             $(val).parent("td").siblings("td").find("input[name='totalPrice']").val("0.00");
         }

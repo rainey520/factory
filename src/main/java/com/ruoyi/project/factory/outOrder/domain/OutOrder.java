@@ -29,8 +29,8 @@ public class OutOrder extends BaseEntity
 	private String outCode;
 	/** 类型(0、客户出货单，1、客户退货单，2、外加工出库单，3、外加工入库单) */
 	private Integer outType;
-	/** 出货日期 */
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm")
+	/** 交付日期 */
+	@JsonFormat(pattern = "yyyy-MM-dd")
 	private Date outTime;
 	/** 总数量 */
 	private Integer outNum;
@@ -40,6 +40,9 @@ public class OutOrder extends BaseEntity
 	private Integer status;
 	/** 备注 */
 	private String remark;
+	/** 创建日期 */
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm")
+	private Date cTime;
 	/** 明细列表 */
 	private List<OutOrderDetail> detailList;
 
@@ -47,6 +50,26 @@ public class OutOrder extends BaseEntity
 	private String pnCode;
 	/** 订单号 */
 	private String orderCode;
+	/** 客户联系方式 */
+	private String cusPhone;
+	/** 客户地址 */
+	private String cusAddress;
+
+	public String getCusPhone() {
+		return cusPhone;
+	}
+
+	public void setCusPhone(String cusPhone) {
+		this.cusPhone = cusPhone;
+	}
+
+	public String getCusAddress() {
+		return cusAddress;
+	}
+
+	public void setCusAddress(String cusAddress) {
+		this.cusAddress = cusAddress;
+	}
 
 	@Override
 	public String getRemark() {
@@ -56,6 +79,14 @@ public class OutOrder extends BaseEntity
 	@Override
 	public void setRemark(String remark) {
 		this.remark = remark;
+	}
+
+	public Date getcTime() {
+		return cTime;
+	}
+
+	public void setcTime(Date cTime) {
+		this.cTime = cTime;
 	}
 
 	public String getPnCode() {

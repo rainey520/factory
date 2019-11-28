@@ -1,0 +1,29 @@
+####################################  服务器未执行SQL  #####################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+####################################  服务器已执行SQL  #####################################################
+
+# 添加出入库主表交付日期
+ALTER TABLE `factory`.`fac_out_order`
+ADD COLUMN `c_time` DATETIME NULL COMMENT '创建日期' AFTER `remark`,
+CHANGE COLUMN `out_time` `out_time` DATE NULL DEFAULT NULL COMMENT '实际交付日期' ;
+# 添加出入库详表交付日期
+ALTER TABLE `factory`.`fac_out_order_detail`
+ADD COLUMN `c_time` DATETIME NULL COMMENT '创建日期' AFTER `out_time`,
+CHANGE COLUMN `out_time` `out_time` DATE NULL DEFAULT NULL COMMENT '交付日期' ;
+
